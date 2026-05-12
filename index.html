@@ -680,7 +680,8 @@ function startSR(){
 
   r.onend=()=>{
     $("interim-box").style.display="none";
-    if(isRec) setTimeout(()=>{ if(isRec){ try{r.start();}catch{startSR();} } },150);
+    // Only restart if still in recording mode (isRec=true)
+    if(isRec===true) setTimeout(()=>{ if(isRec===true){ try{r.start();}catch{startSR();} } },200);
   };
 
   try{ r.start(); }
@@ -704,14 +705,20 @@ function toggleRec(){
 }
 
 function stopRec(){
-  isRec=false;
+  isRec=false;                          // FIRST: prevent onend restart
   clearInterval(recTimer);
-  try{srInst&&srInst.stop();}catch{}
+  // Use abort() not stop() — abort kills immediately without firing a final result
+  // But we want final results already accumulated in accumText/transcript
+  // So: stop STT, wait briefly for any last final result, then render
+  try{srInst&&srInst.abort();}catch{}
   $("interim-box").style.display="none";
   $("btn-rec").className="btn-rec idle";
   setWave(false);
-  $("rec-label").textContent=transcript?"🔁 다시 녹음하기":"🎙 녹음 시작";
-  renderDone();
+  // Wait 300ms for any last onresult to fire before reading transcript
+  setTimeout(()=>{
+    $("rec-label").textContent=transcript?"🔁 다시 녹음하기":"🎙 녹음 시작";
+    renderDone();
+  }, 300);
 }
 
 function stopRecSilent(){
@@ -765,6 +772,9 @@ function showRating(){
   document.querySelectorAll(".star-btn").forEach(b=>b.classList.remove("selected"));
   $("star-label").textContent="별점을 선택하면 다음으로 넘어가요";
   $("btn-next").style.display="none";
+  // Re-set model answer text to ensure it's visible
+  const q=queue[qIdx];
+  if(q){ $("model-text2").textContent='"'+q.a+'"'; }
 }
 
 function showErr(msg){ const b=$("error-banner"); b.style.display="block"; b.textContent=msg; }
