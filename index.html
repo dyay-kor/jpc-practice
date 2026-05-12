@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>도영이의 JPC 인터뷰 연습</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Baloo+2:wght@700;800&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --navy:#1A3A5C; --coral:#FF6B6B; --teal:#00B4A6; --gold:#FFB347;
+  --green:#27AE60; --orange:#E67E22; --red:#E74C3C; --gray:#94A3B8;
+  --white:#FFFFFF; --light:#F8FAFC; --sky:#E8F4FD; --soft:#EBF8FF;
+}
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+body { font-family:'Nunito',sans-serif; background:var(--light); min-height:100vh; }
+button { font-family:'Nunito',sans-serif; cursor:pointer; border:none; outline:none; }
+button:active { opacity:0.85; transform:scale(0.97); }
+
+.screen { display:none; min-height:100vh; }
+.screen.active { display:block; }
+
+/* ── HOME ── */
+#screen-home {
+  background:linear-gradient(160deg,var(--sky),#D6EAF8);
+  display:flex; align-items:center; justify-content:center; padding:20px;
+}
+#screen-home.active { display:flex; }
+.home-inner { max-width:440px; width:100%; }
+.hero-card {
+  background:var(--navy); border-radius:28px; padding:28px 24px;
+  margin-bottom:16px; text-align:center;
+  box-shadow:0 12px 40px rgba(26,58,92,0.3);
+}
+.hero-card h1 { font-family:'Baloo 2',cursive; font-size:28px; color:var(--white); margin:8px 0 4px; }
+.hero-card p  { color:#90CAF9; font-size:13px; }
+.stats-row { display:flex; justify-content:center; gap:24px; margin-top:16px; }
+.stat-num { font-family:'Baloo 2',cursive; font-size:28px; }
+.stat-lbl { font-size:11px; color:#90CAF9; }
+.guide-card {
+  background:#FFF8E1; border:2px solid var(--gold);
+  border-radius:20px; padding:16px; margin-bottom:16px;
+}
+.guide-card h3 { font-weight:800; color:var(--orange); font-size:14px; margin-bottom:8px; }
+.guide-card p  { font-size:13px; color:#555; line-height:1.9; }
+.feature-card {
+  background:var(--white); border-radius:24px; padding:20px;
+  margin-bottom:16px; box-shadow:0 4px 20px rgba(0,0,0,0.06);
+}
+.feature-row { display:flex; gap:12px; margin-bottom:10px; align-items:flex-start; }
+.feature-icon  { font-size:22px; flex-shrink:0; }
+.feature-title { font-weight:800; color:var(--navy); font-size:14px; }
+.feature-desc  { color:var(--gray); font-size:12px; }
+.btn-primary {
+  background:linear-gradient(135deg,var(--coral),#FF8E53);
+  color:var(--white); border-radius:20px; padding:16px;
+  font-size:18px; font-family:'Baloo 2',cursive; width:100%;
+  box-shadow:0 8px 24px rgba(255,107,107,0.4); display:block; margin-bottom:10px;
+}
+.btn-secondary {
+  background:var(--white); color:var(--navy);
+  border:2px solid var(--navy); border-radius:20px;
+  padding:14px; font-size:15px; font-weight:800; width:100%; display:block;
+}
+
+/* ── SESSION ── */
+#screen-session { background:var(--light); padding-bottom:48px; }
+.progress-wrap {
+  background:var(--navy); padding:14px 20px 10px;
+  position:sticky; top:0; z-index:10;
+}
+.progress-top { display:flex; justify-content:space-between; margin-bottom:8px; }
+.prog-set { color:#90CAF9; font-size:13px; font-weight:700; }
+.prog-num { color:var(--gold); font-weight:800; font-family:'Baloo 2',cursive; }
+.prog-track { background:rgba(255,255,255,0.15); border-radius:8px; height:8px; overflow:hidden; }
+.prog-fill  { height:100%; background:linear-gradient(90deg,var(--teal),var(--coral)); border-radius:8px; transition:width .4s; }
+.s-inner { max-width:480px; margin:0 auto; padding:16px 16px 0; }
+
+/* question card */
+.q-card {
+  background:var(--white); border-radius:28px; padding:24px;
+  margin-bottom:14px; box-shadow:0 6px 24px rgba(0,0,0,0.07);
+}
+.q-top  { display:flex; justify-content:space-between; margin-bottom:12px; align-items:flex-start; }
+.q-emoji { font-size:48px; }
+.q-badge {
+  border-radius:12px; padding:4px 10px; font-size:12px;
+  font-weight:800; color:var(--white); align-self:flex-start;
+}
+.q-text { font-family:'Baloo 2',cursive; font-size:18px; color:var(--navy); margin-bottom:16px; line-height:1.45; }
+.btn-tts {
+  color:var(--white); border-radius:14px; padding:11px 20px;
+  font-size:15px; font-weight:800; display:inline-flex; align-items:center; gap:8px;
+  box-shadow:0 4px 12px rgba(0,180,166,0.25);
+}
+.btn-tts.idle    { background:linear-gradient(135deg,var(--teal),#009688); }
+.btn-tts.playing { background:var(--coral); }
+
+/* rec panel */
+.rec-panel {
+  background:var(--white); border-radius:24px; padding:20px;
+  margin-bottom:14px; box-shadow:0 4px 16px rgba(0,0,0,0.05);
+}
+.rec-panel h3 { font-weight:800; color:var(--navy); font-size:14px; margin-bottom:14px; }
+.btn-rec {
+  color:var(--white); border-radius:20px; padding:18px 20px;
+  font-size:17px; font-family:'Baloo 2',cursive; width:100%;
+  display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom:14px;
+}
+.btn-rec.idle   { background:linear-gradient(135deg,var(--coral),#FF8E53); box-shadow:0 4px 16px rgba(255,107,107,0.35); }
+.btn-rec.active { background:linear-gradient(135deg,var(--red),#C0392B);   box-shadow:0 4px 20px rgba(231,76,60,0.55); }
+
+/* wave bars */
+.wave-bars { display:inline-flex; align-items:center; gap:3px; height:24px; }
+.wave-bar  { width:4px; border-radius:4px; background:rgba(255,255,255,0.55); height:5px; }
+.wave-bar.on { animation-timing-function:ease-in-out; animation-iteration-count:infinite; animation-direction:alternate; }
+.wave-bar:nth-child(1).on{animation:wb0 .45s ease-in-out infinite alternate}
+.wave-bar:nth-child(2).on{animation:wb1 .52s ease-in-out infinite alternate}
+.wave-bar:nth-child(3).on{animation:wb2 .40s ease-in-out infinite alternate}
+.wave-bar:nth-child(4).on{animation:wb1 .58s ease-in-out infinite alternate}
+.wave-bar:nth-child(5).on{animation:wb0 .48s ease-in-out infinite alternate}
+@keyframes wb0{from{height:4px}to{height:22px}}
+@keyframes wb1{from{height:8px}to{height:16px}}
+@keyframes wb2{from{height:2px}to{height:26px}}
+
+.interim-box {
+  background:var(--soft); border-radius:14px; padding:10px 14px;
+  font-size:14px; color:var(--teal); font-style:italic; margin-bottom:10px;
+}
+.transcript-label { font-size:12px; color:var(--gray); font-weight:700; margin-bottom:6px; }
+.transcript-box {
+  background:#F0FFF4; border:2px solid var(--green); border-radius:14px;
+  padding:12px; font-size:15px; color:var(--navy); line-height:1.65; margin-bottom:12px;
+}
+.btn-replay {
+  width:100%; border-radius:14px; padding:11px 14px;
+  font-weight:800; font-size:14px; display:flex; align-items:center;
+  justify-content:center; gap:8px; margin-bottom:12px;
+}
+.btn-replay.idle    { background:var(--soft); border:2px solid var(--teal); color:var(--teal); }
+.btn-replay.playing { background:#FEE2E2;      border:2px solid var(--red);  color:var(--red); }
+.btn-row { display:flex; gap:8px; }
+.btn-retry  { flex:1; background:#FEE2E2; color:var(--red); border-radius:14px; padding:12px; font-weight:800; font-size:13px; }
+
+.rec-guide { text-align:center; color:var(--gray); font-size:13px; padding:8px 0; }
+.no-transcript { text-align:center; padding:14px 0; }
+.no-transcript .big-mic { font-size:44px; margin-bottom:8px; }
+.no-transcript h4 { color:var(--navy); font-weight:800; font-size:15px; margin-bottom:4px; }
+.no-transcript p  { color:var(--gray); font-size:13px; margin-bottom:16px; }
+.btn-retry-big {
+  background:linear-gradient(135deg,var(--coral),#FF8E53);
+  color:var(--white); border-radius:16px; padding:13px 32px;
+  font-family:'Baloo 2',cursive; font-size:16px;
+  box-shadow:0 4px 14px rgba(255,107,107,0.35);
+}
+
+/* error */
+.error-banner {
+  background:#FEE2E2; border:2px solid var(--red); border-radius:16px;
+  padding:14px; margin-bottom:14px; font-size:13px; color:var(--red); font-weight:700; line-height:1.6;
+}
+
+/* self-rating */
+.rating-panel {
+  background:var(--white); border-radius:24px; padding:20px;
+  margin-bottom:14px; box-shadow:0 4px 16px rgba(0,0,0,0.05);
+}
+.rating-panel h3 { font-weight:800; color:var(--navy); font-size:14px; margin-bottom:14px; text-align:center; }
+.star-row { display:flex; justify-content:center; gap:12px; margin-bottom:16px; }
+.star-btn {
+  background:none; font-size:42px; padding:4px;
+  transition:transform .15s; filter:grayscale(1) opacity(.35);
+}
+.star-btn.selected { filter:none; transform:scale(1.15); }
+
+/* model answer */
+.model-toggle {
+  width:100%; border-radius:14px; padding:11px; font-weight:800;
+  font-size:13px; color:var(--navy); margin-bottom:0;
+}
+.model-toggle.closed { background:#F8F8F8; border:2px solid var(--gray); }
+.model-toggle.open   { background:#F0FFF4; border:2px solid var(--green); }
+.model-box {
+  background:#F0FFF4; border:2px solid var(--green);
+  border-radius:14px; padding:14px; margin-top:10px;
+}
+.model-box-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.model-label  { font-weight:800; color:var(--green); font-size:13px; }
+.btn-listen   { background:var(--green); color:var(--white); border-radius:10px; padding:5px 12px; font-size:13px; font-weight:700; }
+.model-text   { color:var(--navy); font-size:14px; line-height:1.65; font-style:italic; }
+
+.btn-next {
+  background:linear-gradient(135deg,var(--navy),#2C5282);
+  color:var(--white); border-radius:18px; padding:16px;
+  font-size:17px; font-family:'Baloo 2',cursive; width:100%;
+  margin-top:14px; box-shadow:0 6px 20px rgba(26,58,92,0.3);
+}
+.btn-skip {
+  background:transparent; color:var(--gray); width:100%;
+  padding:10px; font-size:13px; font-weight:700;
+}
+
+/* ── STATS ── */
+#screen-stats { background:var(--light); padding:20px; }
+.stats-header { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+.btn-back { background:var(--navy); color:var(--white); border-radius:12px; padding:8px 16px; font-weight:700; font-size:14px; }
+.stats-header h2 { font-family:'Baloo 2',cursive; color:var(--navy); font-size:22px; }
+.stats-summary {
+  background:var(--navy); border-radius:24px; padding:20px; margin-bottom:16px;
+  display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; text-align:center;
+}
+.sum-num { font-family:'Baloo 2',cursive; font-size:24px; }
+.sum-lbl { font-size:10px; color:#90CAF9; }
+.weak-section {
+  background:#FFF5F5; border:2px solid var(--coral);
+  border-radius:20px; padding:16px; margin-bottom:16px;
+}
+.weak-title { font-weight:800; color:var(--red); margin-bottom:10px; }
+.weak-row {
+  display:flex; justify-content:space-between; align-items:center;
+  background:var(--white); border-radius:12px; padding:8px 12px; margin-bottom:6px;
+}
+.weak-q     { font-size:13px; color:var(--navy); flex:1; }
+.weak-score { font-weight:800; font-size:13px; margin-left:8px; }
+.all-section { background:var(--white); border-radius:20px; padding:16px; box-shadow:0 4px 16px rgba(0,0,0,0.05); }
+.all-title  { font-weight:800; color:var(--navy); margin-bottom:12px; }
+.set-label  { font-weight:800; color:var(--teal); font-size:13px; margin:12px 0 6px; }
+.q-row      { display:flex; align-items:center; gap:8px; margin-bottom:4px; padding:5px 10px; border-radius:10px; background:#F8F9FA; }
+.q-row-emoji{ font-size:14px; }
+.q-row-text { font-size:11px; color:var(--navy); flex:1; }
+.q-row-score{ font-weight:800; font-size:12px; }
+.btn-reset  { margin-top:14px; background:#FEE2E2; color:var(--red); border-radius:14px; padding:12px; width:100%; font-weight:800; font-size:13px; }
+
+/* ── RESULT ── */
+#screen-result {
+  background:linear-gradient(160deg,var(--sky),#D6EAF8);
+  display:flex; align-items:center; justify-content:center; padding:20px;
+}
+#screen-result.active { display:flex; }
+.result-inner { max-width:440px; width:100%; text-align:center; }
+.result-card {
+  background:var(--navy); border-radius:24px; padding:24px;
+  margin:16px 0; box-shadow:0 8px 32px rgba(26,58,92,0.2);
+}
+.result-score { font-family:'Baloo 2',cursive; font-size:56px; }
+.result-sub   { color:#90CAF9; font-size:14px; margin-bottom:16px; }
+.result-grid  { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
+.result-cell  { border-radius:10px; padding:6px 2px; text-align:center; }
+</style>
+</head>
+<body>
+
+<!-- ══ HOME ══════════════════════════════════════════ -->
+<div id="screen-home" class="screen">
+  <div class="home-inner">
+    <div class="hero-card">
+      <div style="font-size:60px">🎓</div>
+      <h1>도영이의 JPC 연습</h1>
+      <p>John Paul College Brisbane · Year 3</p>
+      <div class="stats-row">
+        <div><div class="stat-num" style="color:var(--gold)">69</div><div class="stat-lbl">총 질문</div></div>
+        <div><div class="stat-num" style="color:var(--coral)" id="stat-tried">0</div><div class="stat-lbl">연습함</div></div>
+        <div><div class="stat-num" style="color:var(--teal)"  id="stat-avg">0%</div><div class="stat-lbl">평균 별점</div></div>
+      </div>
+    </div>
+
+    <div class="guide-card">
+      <h3>📱 사용 방법</h3>
+      <p>
+        1️⃣ <b>질문 듣기</b> 버튼으로 발음 확인<br/>
+        2️⃣ <b>녹음 시작</b> → 마이크 허용 → 영어로 말하기<br/>
+        3️⃣ <b>녹음 중지</b> → 내 답변 확인 & 다시 듣기<br/>
+        4️⃣ <b>모범 답변</b>과 비교 후 <b>⭐ 자기 평가</b>
+      </p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-row"><span class="feature-icon">🔊</span><div><div class="feature-title">질문 읽어주기</div><div class="feature-desc">미국식 발음으로 천천히 또박또박</div></div></div>
+      <div class="feature-row"><span class="feature-icon">🎤</span><div><div class="feature-title">음성 인식</div><div class="feature-desc">말하면 텍스트로 자동 변환</div></div></div>
+      <div class="feature-row"><span class="feature-icon">▶️</span><div><div class="feature-title">내 답변 다시 듣기</div><div class="feature-desc">인식된 답변을 TTS로 재생</div></div></div>
+      <div class="feature-row"><span class="feature-icon">⭐</span><div><div class="feature-title">자기 평가 (1~3점)</div><div class="feature-desc">모범 답변 비교 후 스스로 별점 매기기</div></div></div>
+      <div class="feature-row" style="margin-bottom:0"><span class="feature-icon">🧠</span><div><div class="feature-title">스마트 반복</div><div class="feature-desc">낮은 별점 문제를 더 자주 출제</div></div></div>
+    </div>
+
+    <button class="btn-primary" style="font-size:20px" onclick="startSession()">🚀 연습 시작하기</button>
+    <button class="btn-secondary" onclick="showScreen('stats')">📊 내 성적표 보기</button>
+  </div>
+</div>
+
+<!-- ══ SESSION ════════════════════════════════════════ -->
+<div id="screen-session" class="screen">
+  <div class="progress-wrap">
+    <div style="max-width:480px;margin:0 auto">
+      <div class="progress-top">
+        <span class="prog-set" id="prog-set">Set 1</span>
+        <span class="prog-num" id="prog-num">1/10</span>
+      </div>
+      <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:10%"></div></div>
+    </div>
+  </div>
+
+  <div class="s-inner">
+
+    <!-- Question -->
+    <div class="q-card">
+      <div class="q-top">
+        <span class="q-emoji" id="q-emoji">👋</span>
+        <span class="q-badge" id="q-badge" style="display:none"></span>
+      </div>
+      <p class="q-text" id="q-text"></p>
+      <button class="btn-tts idle" id="btn-tts" onclick="toggleTTS()">🔊 질문 듣기</button>
+    </div>
+
+    <!-- Error -->
+    <div class="error-banner" id="error-banner" style="display:none"></div>
+
+    <!-- Recording -->
+    <div class="rec-panel" id="rec-panel">
+      <h3>🎤 영어로 크게 말해보세요!</h3>
+      <button class="btn-rec idle" id="btn-rec" onclick="toggleRec()">
+        <span class="wave-bars">
+          <span class="wave-bar" id="wb1"></span><span class="wave-bar" id="wb2"></span>
+          <span class="wave-bar" id="wb3"></span><span class="wave-bar" id="wb4"></span>
+          <span class="wave-bar" id="wb5"></span>
+        </span>
+        <span id="rec-label">🎙 녹음 시작</span>
+      </button>
+      <div class="rec-guide" id="rec-guide">버튼을 탭하고 마이크 허용 → 영어로 말하기 🎤</div>
+      <div class="interim-box" id="interim-box" style="display:none"></div>
+      <div id="done-area"></div>
+    </div>
+
+    <!-- Self Rating (shown after recording) -->
+    <div class="rating-panel" id="rating-panel" style="display:none">
+      <h3>⭐ 모범 답변과 비교해서 별점을 매겨요!</h3>
+
+      <!-- Model answer (always visible here) -->
+      <div class="model-box" style="margin-bottom:16px">
+        <div class="model-box-top">
+          <span class="model-label">✅ 모범 답변</span>
+          <button class="btn-listen" onclick="speakModel()">🔊 듣기</button>
+        </div>
+        <div class="model-text" id="model-text2"></div>
+      </div>
+
+      <div class="star-row" id="star-row">
+        <button class="star-btn" data-v="1" onclick="selectStar(1)">⭐</button>
+        <button class="star-btn" data-v="2" onclick="selectStar(2)">⭐</button>
+        <button class="star-btn" data-v="3" onclick="selectStar(3)">⭐</button>
+      </div>
+      <div style="text-align:center;color:var(--gray);font-size:13px;margin-bottom:16px" id="star-label">
+        별점을 선택하면 다음으로 넘어가요
+      </div>
+      <button class="btn-next" id="btn-next" onclick="nextQuestion()" style="display:none">
+        다음 질문 →
+      </button>
+    </div>
+
+    <button class="btn-skip" id="btn-skip" onclick="skipQuestion()">건너뛰기 ›</button>
+  </div>
+</div>
+
+<!-- ══ STATS ══════════════════════════════════════════ -->
+<div id="screen-stats" class="screen">
+  <div style="max-width:480px;margin:0 auto;padding:20px">
+    <div class="stats-header">
+      <button class="btn-back" onclick="showScreen('home')">← 홈</button>
+      <h2>📊 도영이 성적표</h2>
+    </div>
+    <div class="stats-summary">
+      <div><div class="sum-num" style="color:var(--gold)" id="s-tried">0/69</div><div class="sum-lbl">연습한 문제</div></div>
+      <div><div class="sum-num" style="color:var(--teal)"  id="s-avg">0%</div><div class="sum-lbl">평균 별점</div></div>
+      <div><div class="sum-num" style="color:var(--coral)" id="s-master">0</div><div class="sum-lbl">만점(⭐⭐⭐)</div></div>
+    </div>
+    <div id="weak-section" class="weak-section" style="display:none">
+      <div class="weak-title" id="weak-title"></div>
+      <div id="weak-list"></div>
+    </div>
+    <div class="all-section">
+      <div class="all-title">전체 문제 현황</div>
+      <div id="all-list"></div>
+    </div>
+    <button class="btn-reset" onclick="resetScores()">🗑 기록 초기화</button>
+  </div>
+</div>
+
+<!-- ══ RESULT ═════════════════════════════════════════ -->
+<div id="screen-result" class="screen">
+  <div class="result-inner">
+    <div style="font-size:72px" id="result-trophy">🏆</div>
+    <div style="font-family:'Baloo 2',cursive;font-size:30px;color:var(--navy);margin:8px 0 16px">오늘 연습 완료!</div>
+    <div class="result-card">
+      <div class="result-score" id="result-score"></div>
+      <div class="result-sub">이번 세션 평균 별점</div>
+      <div class="result-grid" id="result-grid"></div>
+    </div>
+    <button class="btn-primary" style="font-size:18px" onclick="startSession()">🔄 다시 연습하기</button>
+    <button class="btn-secondary" onclick="showScreen('stats')">📊 성적표 보기</button>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+// QUESTIONS
+// ════════════════════════════════════════════════
+const Q = [
+  {id:1,  set:"Set 1",part:"Personal Interests",     emoji:"👋", q:"Can you tell me a little bit about yourself?",                                                              a:"Hello, my name is Do-young. I am nine years old and I live in Seoul. I live with my parents and my little sister. We are a happy family."},
+  {id:2,  set:"Set 1",part:"Personal Interests",     emoji:"✈️", q:"How do you feel about moving to Australia?",                                                               a:"I am a little nervous, but I am very curious because I have never been there. I watched videos and read books about Australia, so now I am very excited!"},
+  {id:3,  set:"Set 1",part:"Personal Interests",     emoji:"⛅", q:"What do you like to do outside when the weather is nice?",                                                  a:"I love to play soccer with my friends. I also like going for walks with my family. I could also ride a bike at the park. I love outdoor activity."},
+  {id:4,  set:"Set 1",part:"Personal Interests",     emoji:"📖", q:"What is your favorite book right now, and why do you like it?",                                             a:"My favorite book is Boo and Bear by Enda Wyley. I find it very interesting because Boo is scared of many things, but at the end, she is not afraid of anything."},
+  {id:5,  set:"Set 1",part:"Personal Interests",     emoji:"📚", q:"Tell me about your favorite subject in school.",                                                            a:"I really like P.E., Math, and Computer classes. In P.E. class, we get to play soccer. In Math class, I am good with numbers and I use an abacus. In computer class, we get to draw on the computer."},
+  {id:6,  set:"Set 1",part:"Personal Interests",     emoji:"🎵", q:"Do you play any sports or musical instruments?",                                                            a:"I like jumping rope! It helps me learn cool tricks and makes me strong. I also learned how to play the basic drums when I was seven years old."},
+  {id:7,  set:"Set 1",part:"Resilience & Growth",    emoji:"⚽", q:"Can you tell me about a time you had to practice hard to get better at something?",                         a:"When I first started playing soccer, it was hard to control the ball. But I practiced dribbling and shooting a lot, and now I am much better at it."},
+  {id:8,  set:"Set 1",part:"Resilience & Growth",    emoji:"✏️", q:"What do you do if you are doing your homework and you make a mistake?",                                     a:"I don't get angry. I use my eraser, take a deep breath, and try to write the right answer. If I don't know, I ask my mom or teacher."},
+  {id:9,  set:"Set 1",part:"Resilience & Growth",    emoji:"🙋", q:"If a teacher gives you instructions but you don't understand, what is the best thing to do?",               a:"I will raise my hand and say, Excuse me, can you please help me? I don't understand."},
+  {id:10, set:"Set 1",part:"Resilience & Growth",    emoji:"🏆", q:"Imagine you are playing a fun game with your friends, but you are losing. How do you act?",                  a:"I will feel a little sad that I am losing, but I will clap for my friend and say, Good game!"},
+  {id:11, set:"Set 1",part:"Resilience & Growth",    emoji:"🏫", q:"Why do you want to come to this school?",                                                                    a:"I want to learn English and make Australian friends. I also want to play my favorite sport, soccer, and try lots of fun new sports."},
+  {id:12, set:"Set 1",part:"Resilience & Growth",    emoji:"🌟", q:"What makes you feel proud of yourself?",                                                                    a:"I feel proud when I score a goal in soccer. I also feel proud when I finish a hard job all by myself, like doing my homework, building Legos, or solving a Rubik's cube."},
+  {id:13, set:"Set 1",part:"Social Skills",          emoji:"🤝", q:"If you see a new student at school who is sitting all alone, what would you do?",                           a:"I would walk up to them, say Hi I am Do-young, and ask them if they want to play soccer or tag with me."},
+  {id:14, set:"Set 1",part:"Social Skills",          emoji:"💛", q:"What does it mean to be a good friend?",                                                                    a:"A good friend is someone who helps me when I make a mistake, and I help them too. A good friend also speaks kindly and has fun playing with me."},
+  {id:15, set:"Set 1",part:"Social Skills",          emoji:"👥", q:"Do you like working on a project by yourself or with a team?",                                              a:"I like working with a team because we can share our ideas and solve problems together. It makes me feel good, and we do a great job."},
+  {id:16, set:"Set 1",part:"Social Skills",          emoji:"😊", q:"If someone accidentally bumps into you and you drop your pencil, what do you do?",                          a:"I will pick up my pencil. If they say I am sorry, I will say It is okay, it was an accident."},
+  {id:17, set:"Set 1",part:"Social Skills",          emoji:"🛝", q:"If you could build a brand new playground for our school, what is one thing you would put in it?",          a:"I would put a fun zipline, a spinning ride, and a big trampoline!"},
+  {id:18, set:"Set 1",part:"Social Skills",          emoji:"❓", q:"Do you have any questions for us about Australia or our school?",                                            a:"Yes! I really like sports, but can I do a lot of art activities too? In first grade, I loved making miniature buildings, and I was really good at it!"},
+  {id:19, set:"Set 2",part:"Australian Culture",     emoji:"🏙️",q:"What is one thing you will miss about Seoul, and what is one thing you are excited to try in Australia?",   a:"I will miss my friends and the food in Seoul, but I am excited to see the beautiful beaches and parks in Australia."},
+  {id:20, set:"Set 2",part:"Australian Culture",     emoji:"🍟", q:"Australian students eat their lunch and snacks outside. What is your favorite snack to eat at recess?",     a:"My favorite snack is potato chips. I like eating outside because I can feel the sunshine."},
+  {id:21, set:"Set 2",part:"Australian Culture",     emoji:"🐨", q:"Do you have a favorite Australian animal besides a kangaroo?",                                              a:"I like the koala because they look very soft and sleep in the trees. They are very cute. I hope I can see one in real life."},
+  {id:22, set:"Set 2",part:"Australian Culture",     emoji:"🏡", q:"What do you like to do on the weekends with your family?",                                                  a:"On Saturday, I usually play soccer with my friends or my dad. On Sundays, I go to a soccer camp to practice my skills."},
+  {id:23, set:"Set 2",part:"Australian Culture",     emoji:"🇰🇷",q:"If you could teach your new Australian friends one word in Korean, what would it be?",                    a:"I would teach them Annyeonghaseyo. It means Hello, so we can greet each other every morning."},
+  {id:24, set:"Set 2",part:"Australian Culture",     emoji:"🎉", q:"What was the most fun thing you did during your last school holiday?",                                      a:"I played soccer with my friends and played some games on my iPad. It was really fun! Of course, I did all my homework first."},
+  {id:25, set:"Set 2",part:"Having a Go",            emoji:"🏏", q:"If the class is playing a new game and you don't know the rules, what would you do?",                       a:"I would watch my friends first to see how they play, and then I would ask the teacher, Can you please teach me how to play?"},
+  {id:26, set:"Set 2",part:"Having a Go",            emoji:"🎨", q:"Tell me about a time you worked really hard on an art project or a math problem. How did it feel when you finished?", a:"When I try very hard and take a long time to finish a math problem or an art project, I feel very proud and excited! I usually want to show it to my parents."},
+  {id:27, set:"Set 2",part:"Having a Go",            emoji:"👂", q:"What is the best way to show a teacher that you are listening?",                                            a:"I look at the teacher's eyes, I sit quietly, and I don't talk when they are talking."},
+  {id:28, set:"Set 2",part:"Having a Go",            emoji:"🧱", q:"Imagine you are building a tall block tower and it accidentally falls over. What do you do?",               a:"I might be a little sad, but I will say, Let us build it again! and try to make it even taller."},
+  {id:29, set:"Set 2",part:"Having a Go",            emoji:"📗", q:"If you are reading a book and you find a long word you don't know, how do you figure it out?",              a:"I will ask the teacher what the word means, or I might ask my friends. Or I could try to read the rest of the book to figure it out."},
+  {id:30, set:"Set 2",part:"Having a Go",            emoji:"🏫", q:"What do you think makes a school a great school?",                                                          a:"A great school has kind teachers, fun classes where we learn new things, and a big playground for recess."},
+  {id:31, set:"Set 2",part:"Mateship & Empathy",     emoji:"🚗", q:"If you and your friend both want to play with the exact same red toy car, how can you solve the problem?",  a:"We can play rock-paper-scissors to see who goes first, or we can set a timer and take turns."},
+  {id:32, set:"Set 2",part:"Mateship & Empathy",     emoji:"😢", q:"How do you cheer up a friend who is feeling sad?",                                                          a:"I ask them, Are you okay? and give them a hug. I would invite them to play a fun game with me to make them smile."},
+  {id:33, set:"Set 2",part:"Mateship & Empathy",     emoji:"🥇", q:"If someone in your class wins an award or a race, what do you say to them?",                               a:"I would clap for them and say, Congratulations! You did a great job!"},
+  {id:34, set:"Set 2",part:"Mateship & Empathy",     emoji:"🍦", q:"Describe a time when you helped someone else.",                                                             a:"One time my little cousin dropped his ice cream and started crying, so I shared half of my ice cream with him."},
+  {id:35, set:"Set 2",part:"Mateship & Empathy",     emoji:"🍎", q:"Imagine you brought a delicious snack for recess, but your friend forgot theirs. What would you do?",      a:"I would break my snack in half and share it with my friend so we can both eat."},
+  {id:36, set:"Set 2",part:"Mateship & Empathy",     emoji:"📋", q:"What are three rules you think every classroom should have?",                                               a:"I think the rules should be: do not run in class, sit properly, and always use kind words with your friends."},
+  {id:37, set:"Set 3",part:"Independence & Routine", emoji:"🌅", q:"What do you do to get ready for school in the morning?",                                                    a:"As soon as I wake up, I brush my teeth, put on my uniform by myself, and eat a healthy breakfast so I have energy."},
+  {id:38, set:"Set 3",part:"Independence & Routine", emoji:"🎩", q:"Australian schools have a rule called No hat no play. How will you remember to bring your hat?",            a:"I will pack my hat in my backpack the night before. That way, it is always ready for school."},
+  {id:39, set:"Set 3",part:"Independence & Routine", emoji:"💪", q:"What is something you are not very good at yet, but want to learn?",                                        a:"I am not very good at speaking English yet, but I want to learn how to speak better by practicing with my new friends in Australia."},
+  {id:40, set:"Set 3",part:"Independence & Routine", emoji:"👟", q:"If you need to tie your shoelaces but you are having trouble, what do you do?",                             a:"I try my best to tie them first. If I still cannot do it, I ask a friend or my teacher to show me how."},
+  {id:41, set:"Set 3",part:"Independence & Routine", emoji:"🧱", q:"Do you like making things with your hands? What is your favorite thing to make?",                          a:"Yes! I love building tall towers and cities with my Lego blocks."},
+  {id:42, set:"Set 3",part:"Problem Solving",        emoji:"🤫", q:"If the classroom is getting very noisy and the teacher asks for quiet time, what do you do?",               a:"I stop talking right away, sit quietly in my chair, and look at the teacher to show I am ready to listen."},
+  {id:43, set:"Set 3",part:"Problem Solving",        emoji:"🧥", q:"Imagine you lose your favorite jacket at school. Where would you look for it?",                             a:"First, I would check the playground. Then, I would look in my locker and ask the teacher to check the lost and found box."},
+  {id:44, set:"Set 3",part:"Problem Solving",        emoji:"♻️", q:"How do you help keep your classroom and the environment clean?",                                            a:"I always put my rubbish in the correct bin. I also make sure to turn off the water tap when I am done washing my hands."},
+  {id:45, set:"Set 3",part:"Problem Solving",        emoji:"💌", q:"If you miss your old friends in Korea while you are at school, what can you do to feel better?",            a:"I can draw a nice picture for them to send later. Then, I will go play with my new friends to feel happy again."},
+  {id:46, set:"Set 3",part:"Problem Solving",        emoji:"💧", q:"If you spill water on the table by accident, what is the right thing to do?",                               a:"I will say Oops, it was an accident! and quickly get some paper towels to wipe it up so no one slips."},
+  {id:47, set:"Set 3",part:"Friendship & Attitude",  emoji:"🙅", q:"If you are picking teams for a game at recess and one person is left out, what do you say?",               a:"I would wave to them and say, Come play with us! You can be on our team. We have plenty of room."},
+  {id:48, set:"Set 3",part:"Friendship & Attitude",  emoji:"🖼️",q:"Imagine a friend makes a beautiful drawing but accidentally rips it and starts crying. How do you help them?", a:"I would say, Do not cry, it is okay. I would help them tape it back together or ask if they want to draw a new one with me."},
+  {id:49, set:"Set 3",part:"Friendship & Attitude",  emoji:"😂", q:"What is something that always makes you laugh?",                                                            a:"I love funny faces! When my dad or my friends make a silly face, it always makes me laugh out loud."},
+  {id:50, set:"Set 3",part:"Friendship & Attitude",  emoji:"🦈", q:"If you could read a book about any animal in the library, what animal would you choose and why?",          a:"I would read a book about sharks because they live deep in the ocean and I want to learn how fast they swim."},
+  {id:51, set:"Set 3",part:"Friendship & Attitude",  emoji:"📘", q:"What are you looking forward to the most about going into Year 3?",                                        a:"I am looking forward to learning how to read thicker chapter books and going on fun school excursions with my class!"},
+  {id:52, set:"Set 4",part:"Creativity & JPC Life",  emoji:"🏛️",q:"If you could build a miniature of any famous building in Australia, what would it be?",                   a:"I would want to build the Sydney Opera House. It looks like big white shells and it would be very fun to make out of paper or clay."},
+  {id:53, set:"Set 4",part:"Creativity & JPC Life",  emoji:"💻", q:"At John Paul College, students use computers and iPads to learn. What is your favorite thing to do on a computer?", a:"I really like to draw pictures on the computer. I can use many different colors and shapes to make cool art."},
+  {id:54, set:"Set 4",part:"Creativity & JPC Life",  emoji:"🗺️",q:"John Paul College has a very big campus. What will you do to make sure you don't get lost in your first week?", a:"I will always stay close to my class and listen to my teacher. I will also try to remember the way to my classroom."},
+  {id:55, set:"Set 4",part:"Creativity & JPC Life",  emoji:"🧩", q:"If you could invent a brand new Lego set, what would it look like?",                                       a:"I want to build a Sydney Opera House Lego set. It would be big and beautiful like the actual Sydney Opera House!"},
+  {id:56, set:"Set 4",part:"Creativity & JPC Life",  emoji:"🏟️",q:"When you become a student here, what is the first thing you want to show your parents about the school?",a:"I want to show them the big sports fields where I play soccer and the art room where I make my projects."},
+  {id:57, set:"Set 4",part:"Sibling & Compassion",   emoji:"👧", q:"You mentioned you live with your little sister. What is your favorite game to play with her?",             a:"I like to play soccer with my little sister. I think she also likes to play soccer."},
+  {id:58, set:"Set 4",part:"Sibling & Compassion",   emoji:"🪀", q:"What do you do if you and your sister want to play with the exact same toy?",                              a:"I tell her we can take turns. Because I am the older brother, sometimes I just let her play with it first so she does not cry."},
+  {id:59, set:"Set 4",part:"Sibling & Compassion",   emoji:"🤲", q:"How will you help your little sister when your family moves to Australia?",                                 a:"I will hold her hand when we walk to the park and share my snacks with her so she feels happy and safe."},
+  {id:60, set:"Set 4",part:"Academic Mindset",       emoji:"🧮", q:"You are very good at math and using an abacus. What do you do when a math problem is too difficult?",       a:"I look at the numbers again very carefully. If I still cannot do it, I ask my teacher for a small hint, but I try my best to finish it by myself."},
+  {id:61, set:"Set 4",part:"Academic Mindset",       emoji:"🐻", q:"In your favorite book Boo and Bear, Boo stops being scared. How do you help yourself when you feel scared of trying something new?", a:"I take a deep breath and tell myself, I can do this! Just like when I first learned how to play soccer."},
+  {id:62, set:"Set 4",part:"Academic Mindset",       emoji:"🔬", q:"Which subject are you the most excited to learn in English at JPC?",                                       a:"I am excited to learn Science. I want to do fun experiments and learn how the world works using English words."},
+  {id:63, set:"Set 4",part:"Academic Mindset",       emoji:"🦘", q:"What is something you learned recently that made you say Wow?",                                             a:"I learned that kangaroos can jump really far and they have pouches to carry their babies! It was very interesting to me."},
+  {id:64, set:"Set 4",part:"Integrity & Respect",    emoji:"⚽", q:"A boy kicks your ball over the fence by accident at recess. What do you say?",                              a:"I would say, It is okay, it was an accident. Then I would ask a teacher to please help us get the ball back."},
+  {id:65, set:"Set 4",part:"Integrity & Respect",    emoji:"🎮", q:"If a new friend invites you to play a game you don't really like, how do you politely answer?",             a:"I would say, Thank you, but I don't really like that game. Can we play tag or soccer instead?"},
+  {id:66, set:"Set 4",part:"Integrity & Respect",    emoji:"🙋", q:"Your friend says the wrong answer out loud in class. What do you do?",                                      a:"I would not laugh at my friend. I would just raise my hand quietly and wait for the teacher to say my name."},
+  {id:67, set:"Set 4",part:"Integrity & Respect",    emoji:"🪀", q:"If you find a very cool toy on the playground and no one is around, what is the right thing to do?",       a:"I will take the toy to my teacher or the school office. That way, the person who lost it can find it again."},
+  {id:68, set:"Set 4",part:"Independence & Health",  emoji:"🥗", q:"What is your favorite healthy food to eat to make you strong for jumping rope and playing soccer?",         a:"I really like eating rice, meat, and fresh fruit like apples. They give me lots of energy to run fast!"},
+  {id:69, set:"Set 4",part:"Independence & Health",  emoji:"🌙", q:"What time do you usually go to sleep to make sure you are rested for school?",                              a:"I usually read a book and then go to sleep around 9 o clock so I can wake up early and feel fresh for the next day."},
+];
+
+// ════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════
+const STORE = "doyoung_v6";
+let scores = {};
+let queue  = [], qIdx = 0;
+let sessionStars = [];
+let isRec = false, srInst = null, recTimer = null, recSecs = 0;
+let accumText = "", transcript = "";
+let ttsOn = false, ownTtsOn = false, ownTtsRec = false;
+let starSelected = 0;
+
+function loadScores(){ try{ scores=JSON.parse(localStorage.getItem(STORE)||"{}"); }catch{ scores={}; } }
+function saveScores(){ try{ localStorage.setItem(STORE,JSON.stringify(scores)); }catch{} }
+
+function showScreen(name){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById("screen-"+name).classList.add("active");
+  if(name==="home")  refreshHome();
+  if(name==="stats") renderStats();
+}
+
+// ════════════════════════════════════════════════
+// QUEUE
+// ════════════════════════════════════════════════
+// Set 순서 가중치: Set 1 가장 자주, Set 4 가장 적게
+const SET_W = {"Set 1":4, "Set 2":3, "Set 3":2, "Set 4":1};
+
+function buildQueue(){
+  const w = Q.map(q=>{
+    const s   = scores[q.id];
+    const setW = SET_W[q.set] || 1;           // Set별 기본 가중치
+    if(!s||!s.attempts) return {q, w:10*setW}; // 미연습 + Set 가중치
+    const starW = s.avgStar>=3?1:s.avgStar>=2?4:8; // 별점 낮을수록 높게
+    return {q, w: starW * setW};              // 두 가중치 곱
+  });
+  const pool=[];
+  w.forEach(({q,w})=>{ for(let i=0;i<w;i++) pool.push(q); });
+  pool.sort(()=>Math.random()-.5);
+  const seen=new Set(), res=[];
+  for(const q of pool){ if(!seen.has(q.id)){seen.add(q.id);res.push(q);} if(res.length>=10)break; }
+  return res;
+}
+
+// ════════════════════════════════════════════════
+// SESSION
+// ════════════════════════════════════════════════
+function startSession(){
+  loadScores();
+  queue=buildQueue(); qIdx=0; sessionStars=[];
+  showScreen("session");
+  loadQ();
+}
+
+function loadQ(){
+  stopTTS(); stopRecSilent();
+  transcript=""; accumText=""; ttsOn=false; ownTtsOn=false; ownTtsRec=false; starSelected=0;
+
+  const q=queue[qIdx];
+  $("prog-set").textContent=`${q.set} · ${q.part}`;
+  $("prog-num").textContent=`${qIdx+1}/${queue.length}`;
+  $("prog-fill").style.width=`${((qIdx+1)/queue.length)*100}%`;
+  $("q-emoji").textContent=q.emoji;
+  $("q-text").textContent=q.q;
+  $("model-text2").textContent=`"${q.a}"`;
+
+  // badge
+  const sc=scores[q.id], badge=$("q-badge");
+  if(sc&&sc.attempts){
+    badge.style.display="block";
+    badge.style.background=starColor(sc.avgStar);
+    badge.textContent=`이전 ${"⭐".repeat(Math.round(sc.avgStar))} (${sc.attempts}회)`;
+  } else badge.style.display="none";
+
+  // TTS btn
+  $("btn-tts").className="btn-tts idle";
+  $("btn-tts").textContent="🔊 질문 듣기";
+
+  // rec btn
+  $("btn-rec").className="btn-rec idle";
+  setWave(false);
+  $("rec-label").textContent="🎙 녹음 시작";
+
+  $("rec-guide").style.display="block";
+  $("interim-box").style.display="none";
+  $("done-area").innerHTML="";
+  $("rec-panel").style.display="block";
+  $("rating-panel").style.display="none";
+  $("btn-skip").style.display="block";
+  $("error-banner").style.display="none";
+
+  // star row reset
+  document.querySelectorAll(".star-btn").forEach(b=>b.classList.remove("selected"));
+  $("star-label").textContent="별점을 선택하면 다음으로 넘어가요";
+  $("btn-next").style.display="none";
+}
+
+function nextQuestion(){
+  stopTTS();
+  if(qIdx<queue.length-1){ qIdx++; loadQ(); }
+  else showResult();
+}
+function skipQuestion(){
+  sessionStars.push(0);
+  qIdx<queue.length-1?(qIdx++,loadQ()):showResult();
+}
+
+// ════════════════════════════════════════════════
+// STAR RATING
+// ════════════════════════════════════════════════
+function starColor(s){ return s>=3?"#27AE60":s>=2?"#FFB347":"#E74C3C"; }
+function starPct(s)  { return Math.round((s/3)*100); }
+
+function selectStar(v){
+  starSelected=v;
+  document.querySelectorAll(".star-btn").forEach(b=>{
+    b.classList.toggle("selected", +b.dataset.v<=v);
+  });
+  const labels=["","💪 다시 연습해요!","👍 잘했어요!","🏆 완벽해요!"];
+  $("star-label").textContent=labels[v];
+
+  // save
+  const q=queue[qIdx];
+  const old=scores[q.id]||{attempts:0,avgStar:0};
+  scores[q.id]={attempts:old.attempts+1, avgStar:+((old.avgStar*old.attempts+v)/(old.attempts+1)).toFixed(2)};
+  saveScores();
+  sessionStars.push(v);
+
+  // show next button after short delay
+  setTimeout(()=>{ $("btn-next").style.display="block"; },400);
+}
+
+// ════════════════════════════════════════════════
+// TTS
+// ════════════════════════════════════════════════
+function getVoice(){
+  const vv=speechSynthesis.getVoices();
+  const want=["Google US English","Samantha","Karen","Microsoft Aria Online (Natural) - English (United States)","Microsoft Zira - English (United States)"];
+  for(const n of want){ const v=vv.find(x=>x.name===n); if(v) return v; }
+  return vv.find(x=>x.lang==="en-US")||vv.find(x=>x.lang.startsWith("en"))||null;
+}
+function speakText(text,onDone){
+  speechSynthesis.cancel();
+  const go=()=>{
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang="en-US"; u.rate=0.72; u.pitch=1.05; u.volume=1;
+    const v=getVoice(); if(v) u.voice=v;
+    u.onend=u.onerror=()=>{ ttsOn=false; ownTtsOn=false; ownTtsRec=false; onDone&&onDone(); };
+    speechSynthesis.speak(u);
+  };
+  speechSynthesis.getVoices().length?go():(speechSynthesis.onvoiceschanged=()=>{speechSynthesis.onvoiceschanged=null;go();});
+}
+function stopTTS(){
+  speechSynthesis.cancel(); ttsOn=false; ownTtsOn=false; ownTtsRec=false;
+  const b=$("btn-tts"); if(b){b.className="btn-tts idle";b.textContent="🔊 질문 듣기";}
+  const r=$("btn-replay"); if(r){r.className="btn-replay idle";r.textContent="▶  내 답변 다시 듣기";}
+}
+function toggleTTS(){
+  if(ttsOn){stopTTS();return;}
+  ttsOn=true;
+  $("btn-tts").className="btn-tts playing";
+  $("btn-tts").textContent="⏹ 멈추기";
+  speakText(queue[qIdx].q,()=>{$("btn-tts").className="btn-tts idle";$("btn-tts").textContent="🔊 질문 듣기";});
+}
+function speakModel(){ speakText(queue[qIdx].a,null); }
+
+// ════════════════════════════════════════════════
+// SPEECH RECOGNITION
+// ════════════════════════════════════════════════
+function $(id){return document.getElementById(id);}
+function setWave(on){
+  ["wb1","wb2","wb3","wb4","wb5"].forEach(id=>{
+    const el=$(id); if(!el) return;
+    on?el.classList.add("on"):el.classList.remove("on");
+  });
+}
+
+function startSR(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){ showErr("❌ 이 브라우저는 음성 인식을 지원하지 않아요. Chrome 브라우저를 사용해 주세요!"); return; }
+
+  const r=new SR();
+  srInst=r;
+  r.lang="en-US"; r.interimResults=true; r.continuous=true; r.maxAlternatives=1;
+
+  r.onresult=e=>{
+    let fin="",tmp="";
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      if(e.results[i].isFinal) fin+=" "+e.results[i][0].transcript;
+      else tmp+=e.results[i][0].transcript;
+    }
+    if(fin){ accumText=(accumText+fin).trim(); transcript=accumText; }
+    const ib=$("interim-box");
+    tmp?(ib.style.display="block",ib.textContent=tmp+"…"):(ib.style.display="none");
+  };
+
+  r.onerror=e=>{
+    $("interim-box").style.display="none";
+    if(e.error==="not-allowed"||e.error==="service-not-allowed"){
+      isRec=false; stopRecSilent();
+      showErr("🎤 마이크 권한이 거부됐어요!\nChrome 주소창 왼쪽 🔒 아이콘 → 마이크 → 허용 으로 바꿔주세요.");
+    }
+  };
+
+  r.onend=()=>{
+    $("interim-box").style.display="none";
+    if(isRec) setTimeout(()=>{ if(isRec){ try{r.start();}catch{startSR();} } },150);
+  };
+
+  try{ r.start(); }
+  catch{ showErr("🎤 마이크 권한이 필요해요!\nChrome 주소창 왼쪽 🔒 → 마이크 → 허용"); isRec=false; }
+}
+
+function toggleRec(){
+  if(isRec){ stopRec(); return; }
+  // START
+  accumText=""; transcript="";
+  $("rec-guide").style.display="none";
+  $("interim-box").style.display="none";
+  $("done-area").innerHTML="";
+  recSecs=0; isRec=true;
+  $("btn-rec").className="btn-rec active";
+  setWave(true);
+  $("rec-label").textContent=`⏹ 녹음 중지   ${fmtTime(recSecs)}`;
+  recTimer=setInterval(()=>{ recSecs++; $("rec-label").textContent=`⏹ 녹음 중지   ${fmtTime(recSecs)}`; },1000);
+  stopTTS();
+  startSR();
+}
+
+function stopRec(){
+  isRec=false;
+  clearInterval(recTimer);
+  try{srInst&&srInst.stop();}catch{}
+  $("interim-box").style.display="none";
+  $("btn-rec").className="btn-rec idle";
+  setWave(false);
+  $("rec-label").textContent=transcript?"🔁 다시 녹음하기":"🎙 녹음 시작";
+  renderDone();
+}
+
+function stopRecSilent(){
+  isRec=false; clearInterval(recTimer);
+  try{srInst&&srInst.abort();}catch{}
+}
+
+function renderDone(){
+  const da=$("done-area");
+  if(transcript){
+    da.innerHTML=`
+      <div class="transcript-label">📝 인식된 텍스트</div>
+      <div class="transcript-box">${esc(transcript)}</div>
+      <button class="btn-replay idle" id="btn-replay" onclick="toggleOwnTtsRec()">▶&nbsp; 내 답변 다시 듣기</button>
+      <div class="btn-row">
+        <button class="btn-retry" onclick="retryRec()">🗑 다시 녹음</button>
+        <button class="btn-retry" style="flex:2;background:linear-gradient(135deg,var(--teal),#009688);color:#fff" onclick="showRating()">✅ 모범 답변 보기</button>
+      </div>`;
+  } else {
+    da.innerHTML=`
+      <div class="no-transcript">
+        <div class="big-mic">🎤</div>
+        <h4>음성이 인식되지 않았어요</h4>
+        <p>마이크에 가까이 대고 크고 또렷하게 말해봐요!</p>
+        <button class="btn-retry-big" onclick="retryRec()">🔁 다시 말하기</button>
+      </div>`;
+  }
+}
+
+function toggleOwnTtsRec(){
+  const btn=$("btn-replay");
+  if(ownTtsRec){ stopTTS(); btn.className="btn-replay idle"; btn.textContent="▶  내 답변 다시 듣기"; return; }
+  ownTtsRec=true;
+  btn.className="btn-replay playing"; btn.textContent="⏹ 재생 중지";
+  speakText(transcript,()=>{ ownTtsRec=false; if(btn){btn.className="btn-replay idle";btn.textContent="▶  내 답변 다시 듣기";} });
+}
+
+function retryRec(){
+  transcript=""; accumText="";
+  $("done-area").innerHTML="";
+  $("rec-guide").style.display="block";
+  $("rec-label").textContent="🎙 녹음 시작";
+  recSecs=0;
+}
+
+function showRating(){
+  $("rec-panel").style.display="none";
+  $("rating-panel").style.display="block";
+  $("btn-skip").style.display="none";
+  starSelected=0;
+  document.querySelectorAll(".star-btn").forEach(b=>b.classList.remove("selected"));
+  $("star-label").textContent="별점을 선택하면 다음으로 넘어가요";
+  $("btn-next").style.display="none";
+}
+
+function showErr(msg){ const b=$("error-banner"); b.style.display="block"; b.textContent=msg; }
+function fmtTime(s){ return `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`; }
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+// ════════════════════════════════════════════════
+// RESULT
+// ════════════════════════════════════════════════
+function showResult(){
+  stopTTS();
+  const avg=sessionStars.filter(s=>s>0).length
+    ? +(sessionStars.filter(s=>s>0).reduce((a,b)=>a+b,0)/sessionStars.filter(s=>s>0).length).toFixed(1)
+    : 0;
+  const pct=Math.round((avg/3)*100);
+  $("result-trophy").textContent=pct>=85?"🏆":pct>=60?"🌟":"💪";
+  $("result-score").textContent=`${"⭐".repeat(Math.round(avg))} ${avg}/3`;
+  $("result-score").style.color=starColor(avg);
+
+  $("result-grid").innerHTML=queue.map((q,i)=>{
+    const s=sessionStars[i]||0;
+    const c=s?starColor(s):"#94A3B8";
+    return `<div class="result-cell" style="background:${c}">
+      <div style="font-size:16px">${q.emoji}</div>
+      <div style="font-size:11px;color:#fff;font-weight:800">${s?"⭐".repeat(s):"–"}</div>
+    </div>`;
+  }).join("");
+
+  showScreen("result");
+}
+
+// ════════════════════════════════════════════════
+// STATS
+// ════════════════════════════════════════════════
+function refreshHome(){
+  loadScores();
+  const tried=Object.keys(scores).filter(k=>scores[k].attempts>0);
+  const avg=tried.length?+(tried.reduce((s,k)=>s+scores[k].avgStar,0)/tried.length).toFixed(1):0;
+  $("stat-tried").textContent=tried.length;
+  $("stat-avg").textContent=avg?`${avg}★`:"0★";
+}
+
+function renderStats(){
+  loadScores();
+  const tried=Object.keys(scores).filter(k=>scores[k].attempts>0);
+  const avg=tried.length?+(tried.reduce((s,k)=>s+scores[k].avgStar,0)/tried.length).toFixed(1):0;
+  const master=Q.filter(q=>scores[q.id]&&scores[q.id].avgStar>=3).length;
+  const weak=Q.filter(q=>scores[q.id]&&scores[q.id].avgStar<2&&scores[q.id].attempts>0);
+
+  $("s-tried").textContent=`${tried.length}/69`;
+  $("s-avg").textContent=avg?`${avg}★`:"0★";
+  $("s-master").textContent=master;
+
+  const ws=$("weak-section");
+  if(weak.length){
+    ws.style.display="block";
+    $("weak-title").textContent=`💪 더 연습이 필요해요 (${weak.length}개)`;
+    $("weak-list").innerHTML=weak.map(q=>`
+      <div class="weak-row">
+        <span class="weak-q">${q.emoji} ${q.q.slice(0,40)}…</span>
+        <span class="weak-score" style="color:${starColor(scores[q.id].avgStar)}">${scores[q.id].avgStar}★</span>
+      </div>`).join("");
+  } else ws.style.display="none";
+
+  const sets=["Set 1","Set 2","Set 3","Set 4"];
+  $("all-list").innerHTML=sets.map(set=>`
+    <div class="set-label">${set}</div>
+    ${Q.filter(q=>q.set===set).map(q=>{
+      const s=scores[q.id];
+      return `<div class="q-row">
+        <span class="q-row-emoji">${q.emoji}</span>
+        <span class="q-row-text">${q.q.slice(0,40)}…</span>
+        <span class="q-row-score" style="color:${s?starColor(s.avgStar):"var(--gray)"}">${s?s.avgStar+"★":"–"}</span>
+      </div>`;
+    }).join("")}`).join("");
+}
+
+function resetScores(){
+  if(!confirm("정말 기록을 초기화할까요?")) return;
+  scores={}; localStorage.removeItem(STORE);
+  renderStats(); refreshHome();
+}
+
+// ════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════
+loadScores();
+showScreen("home");
+</script>
+</body>
+</html>
