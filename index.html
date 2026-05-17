@@ -360,18 +360,23 @@ button:active { opacity:0.85; transform:scale(0.97); }
 
 <!-- ══ SESSION ════════════════════════════════════════ -->
 <div id="screen-session" class="screen">
-  <!-- ★ STICKY MAP at top of session -->
-  <div id="session-map-wrap" style="position:sticky;top:0;z-index:20;box-shadow:0 3px 12px rgba(0,0,0,0.2)">
-    <div id="session-map"></div>
-    <!-- slim Q progress bar under map -->
-    <div style="background:var(--navy);padding:6px 16px 8px">
-      <div style="max-width:480px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-        <span style="color:#90CAF9;font-size:12px;font-weight:700" id="prog-set">Set 1</span>
-        <span style="color:var(--gold);font-weight:800;font-size:12px;font-family:'Baloo 2',cursive" id="prog-num">1/10</span>
+  <!-- ★ STICKY MINI-MAP STRIP at top -->
+  <div style="position:sticky;top:0;z-index:20;background:var(--navy);box-shadow:0 3px 10px rgba(0,0,0,0.25)">
+    <!-- Journey strip -->
+    <div style="padding:6px 14px 4px;max-width:480px;margin:0 auto">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="color:#FFD700;font-size:11px;font-weight:800;font-family:'Baloo 2',cursive;white-space:nowrap">🗺️ 여정</span>
+        <div id="session-map" style="flex:1;overflow:hidden"></div>
+        <span style="color:#FFD700;font-size:11px;font-weight:800;font-family:'Baloo 2',cursive;white-space:nowrap" id="map-pct-label">0%</span>
       </div>
-      <div style="max-width:480px;margin:0 auto">
-        <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:10%"></div></div>
+    </div>
+    <!-- Q progress bar -->
+    <div style="padding:2px 14px 6px;max-width:480px;margin:0 auto">
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+        <span style="color:#90CAF9;font-size:11px;font-weight:700" id="prog-set">Set 1</span>
+        <span style="color:var(--gold);font-weight:800;font-size:11px;font-family:'Baloo 2',cursive" id="prog-num">1/10</span>
       </div>
+      <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:10%"></div></div>
     </div>
   </div>
 
@@ -634,6 +639,41 @@ const DOYOUNG_SVG=`<svg width="56" height="68" viewBox="0 0 56 68" xmlns="http:/
 
 function getAnsweredCount(){ return Object.keys(scores).filter(k=>scores[k]&&scores[k].attempts>0).length; }
 function getMapStep(){ return Math.min(TOTAL_STEPS-1, getAnsweredCount()); } // 1 question = 1 step
+
+// ── Compact dot strip for session header ─────────
+function renderSessionStrip(){
+  const el=$("session-map"); if(!el) return;
+  const done=getAnsweredCount(), pct=Math.round((done/TOTAL_QS)*100);
+  const lbl=$("map-pct-label"); if(lbl) lbl.textContent=pct+"%";
+
+  // Show milestone icons at key points, dots in between
+  // Use 20 segments (MAP_STEPS length) mapped to done/69
+  const SEG=MAP_STEPS.length; // 20 segments
+  let h='<div style="display:flex;align-items:center;gap:2px;padding:2px 0">';
+  for(let i=0;i<SEG;i++){
+    const threshold=Math.floor((i/SEG)*TOTAL_QS);
+    const isDone=done>threshold;
+    const isCur=done>=threshold && done<Math.floor(((i+1)/SEG)*TOTAL_QS);
+    const isMs=(i===0||i===4||i===8||i===11||i===14||i===17||i===SEG-1);
+    if(isMs){
+      // Milestone icon
+      const bg=isDone?"#27AE60":isCur?"#FFD700":"rgba(255,255,255,0.15)";
+      const sz=isCur?"16px":"14px";
+      h+=`<div style="width:${sz};height:${sz};border-radius:4px;background:${bg};
+           display:flex;align-items:center;justify-content:center;
+           font-size:9px;flex-shrink:0;
+           ${isCur?"box-shadow:0 0 0 2px #FFD700;":""}"
+           title="${MAP_STEPS[i].label}">${isDone||isCur?MAP_STEPS[i].icon:"·"}</div>`;
+    } else {
+      // Small dot
+      const bg=isDone?"#4CAF50":isCur?"#FFD700":"rgba(255,255,255,0.2)";
+      h+=`<div style="flex:1;height:6px;border-radius:3px;background:${bg};min-width:4px;
+           ${isCur?"box-shadow:0 0 4px #FFD700;":""}"></div>`;
+    }
+  }
+  h+='</div>';
+  el.innerHTML=h;
+}
 
 // ── Mini map (question card strip) ──────────────
 function renderMiniMap(containerId){
@@ -985,8 +1025,8 @@ function loadQ(){
   $("q-text").textContent=q.q;
   $("model-text2").textContent=`"${q.a}"`;
 
-  // session map (sticky top)
-  renderMap("session-map", false);
+  // session map strip
+  renderSessionStrip();
 
   // badge
   const sc=scores[q.id], badge=$("q-badge");
@@ -1053,7 +1093,7 @@ function selectStar(v){
   // show next button after short delay
   setTimeout(()=>{ $("btn-next").style.display="block"; },400);
   // refresh mini map with new progress
-  renderMap("session-map", false);
+  renderSessionStrip();
 }
 
 // ════════════════════════════════════════════════
