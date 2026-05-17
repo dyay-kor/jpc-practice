@@ -657,8 +657,51 @@ let ttsOn = false, ownTtsOn = false, ownTtsRec = false;
 let starSelected = 0;
 let mediaRec = null, audioChunks = [], audioBlob = null, audioPlayer = null, audioPlaying = false;
 
-function loadScores(){ try{ scores=JSON.parse(localStorage.getItem(STORE)||"{}"); }catch{ scores={}; } }
-function saveScores(){ try{ localStorage.setItem(STORE,JSON.stringify(scores)); }catch{} }
+// ── Firebase init ──────────────────────────────
+const FB_CONFIG = {
+  apiKey: "AIzaSyC_v0rD6PxKAzefM_p_vNPKqpM29AuHePo",
+  authDomain: "jpc-practice.firebaseapp.com",
+  projectId: "jpc-practice",
+  storageBucket: "jpc-practice.firebasestorage.app",
+  messagingSenderId: "573167304141",
+  appId: "1:573167304141:web:777ea7e42c8c7c1b94d884"
+};
+if(!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
+const db = firebase.firestore();
+const FB_DOC = "doyoung_0125"; // user document ID based on PIN
+
+// ── loadScores: localStorage first (instant), then Firebase (sync) ──
+function loadScores(){
+  try{ scores=JSON.parse(localStorage.getItem(STORE)||"{}"); }catch{ scores={}; }
+}
+
+async function loadScoresFromCloud(){
+  try{
+    const doc = await db.collection("users").doc(FB_DOC).get();
+    if(doc.exists && doc.data().scores){
+      const cloudScores = doc.data().scores;
+      // Merge: take higher attempt count per question
+      Object.keys(cloudScores).forEach(k=>{
+        if(!scores[k] || cloudScores[k].attempts > scores[k].attempts){
+          scores[k] = cloudScores[k];
+        }
+      });
+      // Save merged result to localStorage
+      try{ localStorage.setItem(STORE, JSON.stringify(scores)); }catch{}
+    }
+  }catch(e){ console.warn("Firebase load failed:", e); }
+}
+
+// ── saveScores: localStorage + Firebase ──────────
+function saveScores(){
+  try{ localStorage.setItem(STORE, JSON.stringify(scores)); }catch{}
+  // Async save to Firebase (non-blocking)
+  db.collection("users").doc(FB_DOC).set({
+    scores: scores,
+    updatedAt: new Date().toISOString(),
+    pin: "0125"
+  }).catch(e => console.warn("Firebase save failed:", e));
+}
 
 function showScreen(name){
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
@@ -1164,14 +1207,17 @@ function checkPin(){
   }
 }
 
-function enterApp(){
-  loadScores();
-  // Override showScreen for home to also call refreshHome + renderMap
+async function enterApp(){
+  loadScores(); // instant local load first
+  // Show home immediately with local data
   document.querySelectorAll(".screen").forEach(s => { s.style.display="none"; s.classList.remove("active"); });
   const home = document.getElementById("screen-home");
   home.classList.add("active");
   home.style.display = "flex";
   refreshHome();
+  // Then sync from Firebase in background
+  await loadScoresFromCloud();
+  refreshHome(); // re-render with cloud data
 }
 
 function changePIN(){
