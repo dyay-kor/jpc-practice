@@ -485,6 +485,7 @@ let isRec = false, srInst = null, recTimer = null, recSecs = 0;
 let accumText = "", transcript = "";
 let ttsOn = false, ownTtsOn = false, ownTtsRec = false;
 let starSelected = 0;
+let mediaRec = null, audioChunks = [], audioBlob = null, audioPlayer = null, audioPlaying = false;
 
 function loadScores(){ try{ scores=JSON.parse(localStorage.getItem(STORE)||"{}"); }catch{ scores={}; } }
 function saveScores(){ try{ localStorage.setItem(STORE,JSON.stringify(scores)); }catch{} }
@@ -651,6 +652,30 @@ function setWave(on){
   });
 }
 
+function startMediaRec(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia) return;
+  navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+    const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+      ? "audio/webm;codecs=opus"
+      : MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm"
+      : MediaRecorder.isTypeSupported("audio/mp4")  ? "audio/mp4" : "";
+    mediaRec = mime ? new MediaRecorder(stream,{mimeType:mime}) : new MediaRecorder(stream);
+    mediaRec.ondataavailable = e=>{ if(e.data&&e.data.size>0) audioChunks.push(e.data); };
+    mediaRec.onstop = ()=>{
+      stream.getTracks().forEach(t=>t.stop());
+      if(audioChunks.length){
+        audioBlob = new Blob(audioChunks, {type: mediaRec.mimeType||"audio/webm"});
+      }
+      // Render after STT has had 300ms to flush last result
+      setTimeout(()=>{
+        $("rec-label").textContent=transcript?"🔁 다시 녹음하기":"🎙 녹음 시작";
+        renderDone();
+      }, 300);
+    };
+    mediaRec.start(100);
+  }).catch(()=>{ /* permission denied — STT only mode, render on timeout */ });
+}
+
 function startSR(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){ showErr("❌ 이 브라우저는 음성 인식을 지원하지 않아요. Chrome 브라우저를 사용해 주세요!"); return; }
@@ -692,6 +717,8 @@ function toggleRec(){
   if(isRec){ stopRec(); return; }
   // START
   accumText=""; transcript="";
+  audioChunks=[]; audioBlob=null; audioPlaying=false;
+  if(audioPlayer){ audioPlayer.pause(); audioPlayer=null; }
   $("rec-guide").style.display="none";
   $("interim-box").style.display="none";
   $("done-area").innerHTML="";
@@ -701,49 +728,71 @@ function toggleRec(){
   $("rec-label").textContent=`⏹ 녹음 중지   ${fmtTime(recSecs)}`;
   recTimer=setInterval(()=>{ recSecs++; $("rec-label").textContent=`⏹ 녹음 중지   ${fmtTime(recSecs)}`; },1000);
   stopTTS();
+  // Start MediaRecorder for real audio playback
+  startMediaRec();
+  // Start STT for text recognition
   startSR();
 }
 
 function stopRec(){
   isRec=false;                          // FIRST: prevent onend restart
   clearInterval(recTimer);
-  // Use abort() not stop() — abort kills immediately without firing a final result
-  // But we want final results already accumulated in accumText/transcript
-  // So: stop STT, wait briefly for any last final result, then render
   try{srInst&&srInst.abort();}catch{}
+  // Stop MediaRecorder — onstop will set audioBlob then call renderDone
+  if(mediaRec && mediaRec.state !== "inactive"){
+    try{ mediaRec.stop(); }catch{}
+  } else {
+    // No MediaRecorder — just render after STT settles
+    setTimeout(()=>{
+      $("rec-label").textContent=transcript?"🔁 다시 녹음하기":"🎙 녹음 시작";
+      renderDone();
+    }, 300);
+  }
   $("interim-box").style.display="none";
   $("btn-rec").className="btn-rec idle";
   setWave(false);
-  // Wait 300ms for any last onresult to fire before reading transcript
-  setTimeout(()=>{
-    $("rec-label").textContent=transcript?"🔁 다시 녹음하기":"🎙 녹음 시작";
-    renderDone();
-  }, 300);
 }
 
 function stopRecSilent(){
   isRec=false; clearInterval(recTimer);
   try{srInst&&srInst.abort();}catch{}
+  try{if(mediaRec&&mediaRec.state!=="inactive") mediaRec.stop();}catch{}
+  if(audioPlayer){ audioPlayer.pause(); audioPlayer=null; }
 }
 
 function renderDone(){
   const da=$("done-area");
-  if(transcript){
+  const hasAudio = !!audioBlob;
+  const hasText  = !!transcript;
+
+  // Replay button: real audio if available, TTS fallback if text only
+  const replayBtn = hasAudio
+    ? `<button class="btn-replay idle" id="btn-replay" onclick="toggleAudioPlay()">▶&nbsp; 내 녹음 듣기 🎙</button>`
+    : hasText
+    ? `<button class="btn-replay idle" id="btn-replay" onclick="toggleOwnTtsRec()">▶&nbsp; 내 답변 다시 듣기</button>`
+    : "";
+
+  if(hasText){
     da.innerHTML=`
       <div class="transcript-label">📝 인식된 텍스트</div>
       <div class="transcript-box">${esc(transcript)}</div>
-      <button class="btn-replay idle" id="btn-replay" onclick="toggleOwnTtsRec()">▶&nbsp; 내 답변 다시 듣기</button>
+      ${replayBtn}
       <div class="btn-row">
         <button class="btn-retry" onclick="retryRec()">🗑 다시 녹음</button>
         <button class="btn-retry" style="flex:2;background:linear-gradient(135deg,var(--teal),#009688);color:#fff" onclick="showRating()">✅ 모범 답변 보기</button>
       </div>`;
   } else {
+    // No STT text — still offer model answer
     da.innerHTML=`
       <div class="no-transcript">
         <div class="big-mic">🎤</div>
         <h4>음성이 인식되지 않았어요</h4>
         <p>마이크에 가까이 대고 크고 또렷하게 말해봐요!</p>
-        <button class="btn-retry-big" onclick="retryRec()">🔁 다시 말하기</button>
+        ${hasAudio ? replayBtn : ""}
+      </div>
+      <div class="btn-row" style="margin-top:12px">
+        <button class="btn-retry" onclick="retryRec()">🔁 다시 녹음</button>
+        <button class="btn-retry" style="flex:2;background:linear-gradient(135deg,var(--teal),#009688);color:#fff" onclick="showRating()">📝 모범 답변 보기</button>
       </div>`;
   }
 }
@@ -756,8 +805,34 @@ function toggleOwnTtsRec(){
   speakText(transcript,()=>{ ownTtsRec=false; if(btn){btn.className="btn-replay idle";btn.textContent="▶  내 답변 다시 듣기";} });
 }
 
+function toggleAudioPlay(){
+  const btn=$("btn-replay");
+  if(audioPlaying){
+    if(audioPlayer){ audioPlayer.pause(); audioPlayer=null; }
+    audioPlaying=false;
+    if(btn){ btn.className="btn-replay idle"; btn.textContent="▶  내 녹음 듣기 🎙"; }
+    return;
+  }
+  if(!audioBlob) return;
+  const url=URL.createObjectURL(audioBlob);
+  audioPlayer=new Audio(url);
+  audioPlaying=true;
+  if(btn){ btn.className="btn-replay playing"; btn.textContent="⏹ 재생 중지"; }
+  audioPlayer.onended=audioPlayer.onerror=()=>{
+    URL.revokeObjectURL(url); audioPlayer=null; audioPlaying=false;
+    if(btn){ btn.className="btn-replay idle"; btn.textContent="▶  내 녹음 듣기 🎙"; }
+  };
+  audioPlayer.play().catch(()=>{
+    audioPlaying=false; audioPlayer=null;
+    if(btn){ btn.className="btn-replay idle"; btn.textContent="▶  내 녹음 듣기 🎙"; }
+  });
+}
+
 function retryRec(){
   transcript=""; accumText="";
+  audioBlob=null; audioChunks=[];
+  if(audioPlayer){ audioPlayer.pause(); audioPlayer=null; }
+  audioPlaying=false;
   $("done-area").innerHTML="";
   $("rec-guide").style.display="block";
   $("rec-label").textContent="🎙 녹음 시작";
