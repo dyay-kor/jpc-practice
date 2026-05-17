@@ -360,13 +360,18 @@ button:active { opacity:0.85; transform:scale(0.97); }
 
 <!-- ══ SESSION ════════════════════════════════════════ -->
 <div id="screen-session" class="screen">
-  <div class="progress-wrap">
-    <div style="max-width:480px;margin:0 auto">
-      <div class="progress-top">
-        <span class="prog-set" id="prog-set">Set 1</span>
-        <span class="prog-num" id="prog-num">1/10</span>
+  <!-- ★ STICKY MAP at top of session -->
+  <div id="session-map-wrap" style="position:sticky;top:0;z-index:20;box-shadow:0 3px 12px rgba(0,0,0,0.2)">
+    <div id="session-map"></div>
+    <!-- slim Q progress bar under map -->
+    <div style="background:var(--navy);padding:6px 16px 8px">
+      <div style="max-width:480px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="color:#90CAF9;font-size:12px;font-weight:700" id="prog-set">Set 1</span>
+        <span style="color:var(--gold);font-weight:800;font-size:12px;font-family:'Baloo 2',cursive" id="prog-num">1/10</span>
       </div>
-      <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:10%"></div></div>
+      <div style="max-width:480px;margin:0 auto">
+        <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:10%"></div></div>
+      </div>
     </div>
   </div>
 
@@ -379,7 +384,6 @@ button:active { opacity:0.85; transform:scale(0.97); }
         <span class="q-badge" id="q-badge" style="display:none"></span>
       </div>
       <p class="q-text" id="q-text"></p>
-      <div id="mini-map" style="margin-bottom:12px"></div>
       <button class="btn-tts idle" id="btn-tts" onclick="toggleTTS()">🔊 질문 듣기</button>
     </div>
 
@@ -559,7 +563,7 @@ const MAP_STEPS = [
   {icon:"🌿",label:"Daisy Hill"},{icon:"🚌",label:"스쿨버스"},{icon:"🏫",label:"JPC 정문"},
   {icon:"⚽",label:"운동장"},{icon:"🎓",label:"입학 완료!"}
 ];
-const TOTAL_STEPS=20, TOTAL_QS=69;
+const TOTAL_STEPS=69, TOTAL_QS=69; // 1 step = 1 question
 
 const DOYOUNG_SVG=`<svg width="56" height="68" viewBox="0 0 56 68" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;filter:drop-shadow(0 3px 8px rgba(0,0,0,0.4))">
   <!-- Hair - dark, slightly messy sides -->
@@ -629,7 +633,7 @@ const DOYOUNG_SVG=`<svg width="56" height="68" viewBox="0 0 56 68" xmlns="http:/
 </svg>`;
 
 function getAnsweredCount(){ return Object.keys(scores).filter(k=>scores[k]&&scores[k].attempts>0).length; }
-function getMapStep(){ return Math.min(TOTAL_STEPS-1,Math.floor((getAnsweredCount()/TOTAL_QS)*TOTAL_STEPS)); }
+function getMapStep(){ return Math.min(TOTAL_STEPS-1, getAnsweredCount()); } // 1 question = 1 step
 
 // ── Mini map (question card strip) ──────────────
 function renderMiniMap(containerId){
@@ -652,7 +656,7 @@ function renderMap(containerId, mini){
   const step=getMapStep(), done=getAnsweredCount(), pct=Math.round((done/TOTAL_QS)*100);
 
   // Build map via canvas
-  const W=420, H=280;
+  const W=420, H=310;
   el.innerHTML=`<canvas id="mario-canvas" width="${W}" height="${H}" style="width:100%;display:block;border-radius:20px"></canvas>
   <div style="background:#1A3A5C;padding:6px 12px;display:flex;justify-content:space-between;align-items:center">
     <span style="color:#FFD700;font-size:12px;font-weight:800;font-family:'Baloo 2',cursive">📍 ${MAP_STEPS[step].label}</span>
@@ -719,20 +723,23 @@ function renderMap(containerId, mini){
     c.beginPath(); c.arc(tx+6,ty-22,10,0,Math.PI*2); c.fill();
   });
 
-  // ── PATH (dotted road) ──
-  // Layout: 2 rows of 10 nodes each, snake pattern
-  const COLS=10, ROWS=2;
-  const nodeW=(W-40)/COLS, nodeH=50;
-  const startX=20+nodeW/2, row1Y=groundY-55, row2Y=groundY-105;
+  // ── PATH: 69 nodes in 4 snake rows ──────────────
+  const COLS=18;  // nodes per row
+  const NROWS=Math.ceil(TOTAL_STEPS/COLS);
+  const nodeW=(W-28)/COLS;
+  const rowH=42;
+  const startX=14+nodeW/2;
+  const baseY=groundY-20;
 
-  // Node positions (snake: row1 L→R, row2 R→L)
   const nodes=[];
   for(let i=0;i<TOTAL_STEPS;i++){
-    if(i<COLS){
-      nodes.push({x:startX+i*nodeW, y:row1Y});
-    } else {
-      nodes.push({x:startX+(TOTAL_STEPS-1-i)*nodeW, y:row2Y});
-    }
+    const row=Math.floor(i/COLS);
+    const col=i%COLS;
+    const x=row%2===0
+      ? startX+col*nodeW          // L→R
+      : startX+(COLS-1-col)*nodeW; // R→L (snake)
+    const y=baseY-row*rowH;
+    nodes.push({x,y});
   }
 
   // Draw connecting path
@@ -750,62 +757,59 @@ function renderMap(containerId, mini){
     c.stroke();
   }
 
-  // ── Draw nodes ──
+  // ── Draw nodes (69 compact) ──────────────────
+  const R=7, RC=9, RG=11; // radius: normal, current, glow
   nodes.forEach((n,i)=>{
     const isDone=i<step, isCur=i===step;
+    const r=isCur?RC:R;
+
     // Shadow
-    c.fillStyle="rgba(0,0,0,0.2)";
-    c.beginPath(); c.arc(n.x+2,n.y+2,isCur?16:13,0,Math.PI*2); c.fill();
+    c.fillStyle="rgba(0,0,0,0.18)";
+    c.beginPath(); c.arc(n.x+1,n.y+1,r,0,Math.PI*2); c.fill();
 
     if(i===TOTAL_STEPS-1){
-      // Final node: JPC castle
+      // 🏆 Final: mini castle
       c.fillStyle="#FFD700";
-      c.fillRect(n.x-14,n.y-18,28,22); // base
+      c.fillRect(n.x-9,n.y-8,18,14);
       c.fillStyle="#FFA000";
-      [-10,-2,6,14].forEach(bx=>{ c.fillRect(n.x+bx-3,n.y-24,6,8); }); // battlements
-      c.fillStyle="#1A3A5C";
-      c.fillRect(n.x-4,n.y-10,8,14); // door
-      // Flag
-      c.fillStyle="#CC0000"; c.fillRect(n.x,n.y-30,12,8);
-      c.strokeStyle="#FFD700"; c.lineWidth=1.5;
-      c.beginPath(); c.moveTo(n.x,n.y-30); c.lineTo(n.x,n.y-45); c.stroke();
+      [-6,0,6].forEach(bx=>{ c.fillRect(n.x+bx-2,n.y-14,4,7); });
+      c.fillStyle="#1A3A5C"; c.fillRect(n.x-2,n.y-4,4,8);
+      c.fillStyle="#CC0000"; c.fillRect(n.x+2,n.y-14,7,5);
+      c.strokeStyle="#FFD700"; c.lineWidth=1;
+      c.beginPath(); c.moveTo(n.x+2,n.y-14); c.lineTo(n.x+2,n.y-20); c.stroke();
     } else if(i===0){
-      // Start: Seoul house
-      c.fillStyle=isDone?"#4CAF50":isCur?"#FFD700":"rgba(255,255,255,0.3)";
-      c.beginPath(); c.arc(n.x,n.y,14,0,Math.PI*2); c.fill();
-      c.fillStyle=isDone||isCur?"#fff":"rgba(255,255,255,0.5)";
-      c.font="14px serif"; c.textAlign="center"; c.textBaseline="middle";
-      c.fillText("🏠",n.x,n.y);
+      // 🏠 Start
+      c.fillStyle=isDone?"#4CAF50":isCur?"#FFD700":"rgba(180,180,180,0.4)";
+      c.beginPath(); c.arc(n.x,n.y,r,0,Math.PI*2); c.fill();
+      c.font=`${r+2}px serif`; c.textAlign="center"; c.textBaseline="middle";
+      c.fillText("🏠",n.x,n.y+1);
     } else {
-      // Regular node
-      const nodeColor=isDone?"#4CAF50":isCur?"#FFD700":"rgba(200,200,200,0.35)";
-      c.fillStyle=nodeColor;
-      c.beginPath(); c.arc(n.x,n.y,isCur?15:12,0,Math.PI*2); c.fill();
+      // Regular
+      c.fillStyle=isDone?"#4CAF50":isCur?"#FFD700":"rgba(180,180,180,0.35)";
+      c.beginPath(); c.arc(n.x,n.y,r,0,Math.PI*2); c.fill();
+      c.strokeStyle=isCur?"#FF8F00":isDone?"#2E7D32":"rgba(255,255,255,0.3)";
+      c.lineWidth=isCur?2.5:1.5;
+      c.beginPath(); c.arc(n.x,n.y,r,0,Math.PI*2); c.stroke();
 
-      // Border
-      c.strokeStyle=isCur?"#FF6F00":isDone?"#1B5E20":"rgba(255,255,255,0.4)";
-      c.lineWidth=isCur?3:2;
-      c.beginPath(); c.arc(n.x,n.y,isCur?15:12,0,Math.PI*2); c.stroke();
-
-      // Icon / checkmark
-      c.font=`${isCur?14:12}px serif`;
-      c.textAlign="center"; c.textBaseline="middle";
+      // Symbol
       if(isDone){
-        c.fillStyle="#fff"; c.font="bold 11px sans-serif";
+        c.fillStyle="#fff"; c.font="bold 8px sans-serif";
+        c.textAlign="center"; c.textBaseline="middle";
         c.fillText("✓",n.x,n.y);
       } else if(isCur){
-        c.fillText(MAP_STEPS[i].icon,n.x,n.y);
-      } else {
-        c.fillStyle="rgba(255,255,255,0.4)";
-        c.fillText(MAP_STEPS[i].icon,n.x,n.y);
+        // Show milestone icon every ~7 steps
+        const mIdx=Math.floor(i/(TOTAL_QS/(MAP_STEPS.length-1)));
+        c.font="9px serif"; c.textAlign="center"; c.textBaseline="middle";
+        c.fillText(MAP_STEPS[Math.min(mIdx,MAP_STEPS.length-1)].icon,n.x,n.y+1);
       }
     }
 
-    // Glow animation for current
+    // Glow for current
     if(isCur){
-      c.strokeStyle="rgba(255,215,0,0.5)";
-      c.lineWidth=6; c.beginPath(); c.arc(n.x,n.y,20,0,Math.PI*2); c.stroke();
-      c.lineWidth=3; c.beginPath(); c.arc(n.x,n.y,24,0,Math.PI*2); c.stroke();
+      c.strokeStyle="rgba(255,215,0,0.45)"; c.lineWidth=5;
+      c.beginPath(); c.arc(n.x,n.y,RG,0,Math.PI*2); c.stroke();
+      c.strokeStyle="rgba(255,215,0,0.2)"; c.lineWidth=4;
+      c.beginPath(); c.arc(n.x,n.y,RG+4,0,Math.PI*2); c.stroke();
     }
   });
 
@@ -981,8 +985,8 @@ function loadQ(){
   $("q-text").textContent=q.q;
   $("model-text2").textContent=`"${q.a}"`;
 
-  // mini map
-  renderMap("mini-map", true);
+  // session map (sticky top)
+  renderMap("session-map", false);
 
   // badge
   const sc=scores[q.id], badge=$("q-badge");
@@ -1049,7 +1053,7 @@ function selectStar(v){
   // show next button after short delay
   setTimeout(()=>{ $("btn-next").style.display="block"; },400);
   // refresh mini map with new progress
-  renderMap("mini-map", true);
+  renderMap("session-map", false);
 }
 
 // ════════════════════════════════════════════════
