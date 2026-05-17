@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 <title>도영이의 JPC 인터뷰 연습</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Baloo+2:wght@700;800&display=swap" rel="stylesheet"/>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <style>
 :root {
   --navy:#1A3A5C; --coral:#FF6B6B; --teal:#00B4A6; --gold:#FFB347;
@@ -229,6 +232,10 @@ button:active { opacity:0.85; transform:scale(0.97); }
 .q-row-text { font-size:11px; color:var(--navy); flex:1; }
 .q-row-score{ font-weight:800; font-size:12px; }
 .btn-reset  { margin-top:14px; background:#FEE2E2; color:var(--red); border-radius:14px; padding:12px; width:100%; font-weight:800; font-size:13px; }
+.pin-dot { width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,0.25);border:2px solid rgba(255,255,255,0.5);transition:background .15s; }
+.pin-dot.filled { background:#fff;border-color:#fff; }
+.pin-btn { background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:16px;padding:18px;font-size:22px;font-family:'Baloo 2',cursive;font-weight:700;cursor:pointer;transition:background .1s; }
+.pin-btn:active { background:rgba(255,255,255,0.3); }
 
 /* ── RESULT ── */
 #screen-result {
@@ -248,6 +255,39 @@ button:active { opacity:0.85; transform:scale(0.97); }
 </style>
 </head>
 <body>
+
+<!-- ══ PIN ═══════════════════════════════════════════ -->
+<div id="screen-pin" class="screen" style="background:linear-gradient(160deg,var(--sky),#D6EAF8);display:flex;align-items:center;justify-content:center;padding:20px;">
+  <div style="max-width:360px;width:100%;text-align:center;">
+    <div style="background:var(--navy);border-radius:28px;padding:32px 24px;box-shadow:0 12px 40px rgba(26,58,92,0.3);">
+      <div style="font-size:56px;margin-bottom:8px">🔐</div>
+      <h2 style="font-family:'Baloo 2',cursive;color:#fff;font-size:22px;margin:0 0 6px">도영이의 JPC 연습</h2>
+      <p style="color:#90CAF9;font-size:13px;margin:0 0 24px">PIN 번호를 입력하세요</p>
+      <!-- PIN dots -->
+      <div style="display:flex;justify-content:center;gap:14px;margin-bottom:24px" id="pin-dots">
+        <div class="pin-dot"></div><div class="pin-dot"></div>
+        <div class="pin-dot"></div><div class="pin-dot"></div>
+      </div>
+      <!-- Number pad -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px">
+        <button class="pin-btn" onclick="pinPress('1')">1</button>
+        <button class="pin-btn" onclick="pinPress('2')">2</button>
+        <button class="pin-btn" onclick="pinPress('3')">3</button>
+        <button class="pin-btn" onclick="pinPress('4')">4</button>
+        <button class="pin-btn" onclick="pinPress('5')">5</button>
+        <button class="pin-btn" onclick="pinPress('6')">6</button>
+        <button class="pin-btn" onclick="pinPress('7')">7</button>
+        <button class="pin-btn" onclick="pinPress('8')">8</button>
+        <button class="pin-btn" onclick="pinPress('9')">9</button>
+        <button class="pin-btn" onclick="pinPress('clear')" style="background:rgba(255,255,255,0.1);font-size:13px">지우기</button>
+        <button class="pin-btn" onclick="pinPress('0')">0</button>
+        <button class="pin-btn" onclick="pinPress('del')" style="background:rgba(255,255,255,0.1);font-size:20px">⌫</button>
+      </div>
+      <div id="pin-msg" style="color:#FF6B6B;font-size:13px;font-weight:700;min-height:20px"></div>
+    </div>
+    <p style="color:var(--gray);font-size:12px;margin-top:12px">처음 사용 시 원하는 PIN 4자리를 입력하면<br/>자동으로 등록돼요</p>
+  </div>
+</div>
 
 <!-- ══ HOME ══════════════════════════════════════════ -->
 <div id="screen-home" class="screen">
@@ -283,6 +323,9 @@ button:active { opacity:0.85; transform:scale(0.97); }
 
     <button class="btn-primary" style="font-size:20px" onclick="startSession()">🚀 연습 시작하기</button>
     <button class="btn-secondary" onclick="showScreen('stats')">📊 내 성적표 보기</button>
+    <div style="text-align:center;margin-top:12px">
+      <button style="background:none;color:var(--gray);font-size:12px;padding:4px 8px;border:none;cursor:pointer" onclick="changePIN()">🔑 PIN 변경</button>
+    </div>
   </div>
 </div>
 
@@ -492,7 +535,8 @@ function saveScores(){ try{ localStorage.setItem(STORE,JSON.stringify(scores)); 
 
 function showScreen(name){
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
-  document.getElementById("screen-"+name).classList.add("active");
+  const el = document.getElementById("screen-"+name);
+  if(el) el.classList.add("active");
   if(name==="home")  refreshHome();
   if(name==="stats") renderStats();
 }
