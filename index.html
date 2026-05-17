@@ -254,44 +254,19 @@ button:active { opacity:0.85; transform:scale(0.97); }
 .result-cell  { border-radius:10px; padding:6px 2px; text-align:center; }
 
 /* ── JOURNEY MAP ── */
+/* ── MARIO-STYLE MAP ── */
 .map-wrap {
-  background:linear-gradient(180deg,#87CEEB 0%,#87CEEB 35%,#90EE90 35%,#228B22 100%);
-  border-radius:24px; padding:16px 12px 12px;
-  margin-bottom:16px; box-shadow:0 6px 24px rgba(0,0,0,0.15);
+  border-radius:20px; margin-bottom:16px;
   overflow:hidden; position:relative;
+  box-shadow:0 6px 24px rgba(0,0,0,0.25);
+  font-family:'Baloo 2',cursive;
 }
-.map-title {
-  font-family:'Baloo 2',cursive; color:#fff; font-size:14px;
-  text-align:center; margin-bottom:10px; text-shadow:0 1px 3px rgba(0,0,0,0.4);
+.mario-map-canvas {
+  width:100%; display:block;
 }
-.map-track {
-  display:flex; flex-wrap:wrap; gap:3px;
-  justify-content:center; position:relative;
-}
-.map-cell {
-  width:36px; height:36px; border-radius:8px;
-  display:flex; align-items:center; justify-content:center;
-  font-size:18px; position:relative; flex-shrink:0;
-  transition:transform .2s;
-}
-.map-cell.done    { background:rgba(255,255,255,0.9); box-shadow:0 2px 6px rgba(0,0,0,0.2); }
-.map-cell.current { background:#fff; box-shadow:0 0 0 3px #FFD700,0 2px 8px rgba(0,0,0,0.3); transform:scale(1.15); z-index:2; }
-.map-cell.locked  { background:rgba(255,255,255,0.25); filter:grayscale(0.7) opacity(0.5); }
-.map-path {
-  position:absolute; top:50%; left:0; right:0; height:3px;
-  background:rgba(255,255,255,0.4); z-index:0; border-radius:2px;
-}
-.map-progress-bar {
-  height:3px; background:#FFD700; border-radius:2px; transition:width .8s;
-}
-.map-pct {
-  text-align:center; font-family:'Baloo 2',cursive;
-  font-size:13px; color:#fff; margin-top:8px;
-  text-shadow:0 1px 3px rgba(0,0,0,0.5);
-}
-/* mini map in question card */
+/* mini map */
 .mini-map-wrap {
-  display:flex; align-items:center; gap:3px;
+  display:flex; align-items:center; gap:2px;
   background:rgba(26,58,92,0.08); border-radius:10px;
   padding:4px 8px;
 }
@@ -586,62 +561,305 @@ const MAP_STEPS = [
 ];
 const TOTAL_STEPS=20, TOTAL_QS=69;
 
-const DOYOUNG_SVG=`<svg width="48" height="56" viewBox="0 0 48 56" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.35))">
-  <ellipse cx="24" cy="15" rx="13" ry="10" fill="#1C0F0A"/>
-  <rect x="11" y="13" width="26" height="7" rx="2" fill="#1C0F0A"/>
-  <ellipse cx="24" cy="23" rx="11" ry="12" fill="#FDBCB4"/>
-  <ellipse cx="19.5" cy="21.5" rx="2.5" ry="3" fill="#111"/>
-  <ellipse cx="28.5" cy="21.5" rx="2.5" ry="3" fill="#111"/>
-  <circle cx="20.5" cy="20.5" r="0.9" fill="#fff"/>
-  <circle cx="29.5" cy="20.5" r="0.9" fill="#fff"/>
-  <ellipse cx="15.5" cy="25" rx="2.5" ry="1.5" fill="#FFAAAA" opacity="0.65"/>
-  <ellipse cx="32.5" cy="25" rx="2.5" ry="1.5" fill="#FFAAAA" opacity="0.65"/>
-  <path d="M19.5 28 Q24 32 28.5 28" stroke="#C06060" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-  <ellipse cx="13" cy="23" rx="2.5" ry="3" fill="#FDBCB4"/>
-  <ellipse cx="35" cy="23" rx="2.5" ry="3" fill="#FDBCB4"/>
-  <rect x="14" y="34" width="20" height="17" rx="4" fill="#1A3A5C"/>
-  <path d="M20 34 L24 39 L28 34" fill="white" opacity="0.85"/>
-  <rect x="8"  y="34" width="7" height="13" rx="3" fill="#1A3A5C"/>
-  <rect x="33" y="34" width="7" height="13" rx="3" fill="#1A3A5C"/>
-  <ellipse cx="11" cy="48" rx="3.5" ry="3" fill="#FDBCB4"/>
-  <ellipse cx="37" cy="48" rx="3.5" ry="3" fill="#FDBCB4"/>
-  <rect x="16" y="50" width="7" height="5" rx="2" fill="#2C3E50"/>
-  <rect x="25" y="50" width="7" height="5" rx="2" fill="#2C3E50"/>
-  <ellipse cx="19.5" cy="55" rx="4" ry="2" fill="#111"/>
-  <ellipse cx="28.5" cy="55" rx="4" ry="2" fill="#111"/>
+const DOYOUNG_SVG=`<svg width="56" height="68" viewBox="0 0 56 68" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;filter:drop-shadow(0 3px 8px rgba(0,0,0,0.4))">
+  <!-- Hair - dark, slightly messy sides -->
+  <ellipse cx="28" cy="17" rx="14" ry="12" fill="#1A0D08"/>
+  <rect x="14" y="15" width="28" height="9" rx="2" fill="#1A0D08"/>
+  <!-- Side hair -->
+  <rect x="14" y="17" width="5" height="10" rx="2" fill="#1A0D08"/>
+  <rect x="37" y="17" width="5" height="10" rx="2" fill="#1A0D08"/>
+  <!-- Face -->
+  <ellipse cx="28" cy="26" rx="12" ry="13" fill="#FDBCB4"/>
+  <!-- Squinting happy eyes (like photo!) -->
+  <path d="M21 24 Q23.5 22 26 24" stroke="#111" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M30 24 Q32.5 22 35 24" stroke="#111" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- Big grin -->
+  <path d="M21 30 Q28 37 35 30" stroke="#B05050" stroke-width="2" fill="#FF9999" stroke-linecap="round"/>
+  <!-- Teeth hint -->
+  <rect x="24" y="30" width="8" height="3" rx="1" fill="white" opacity="0.8"/>
+  <!-- Blush cheeks -->
+  <ellipse cx="18" cy="28" rx="3" ry="2" fill="#FFB3B3" opacity="0.7"/>
+  <ellipse cx="38" cy="28" rx="3" ry="2" fill="#FFB3B3" opacity="0.7"/>
+  <!-- Ears -->
+  <ellipse cx="16" cy="26" rx="2.5" ry="3" fill="#FDBCB4"/>
+  <ellipse cx="40" cy="26" rx="2.5" ry="3" fill="#FDBCB4"/>
+
+  <!-- FC Seoul jersey - red/black stripes -->
+  <!-- Main body -->
+  <rect x="16" y="38" width="24" height="22" rx="4" fill="#CC0000"/>
+  <!-- Black vertical stripes -->
+  <rect x="20" y="38" width="5" height="22" fill="#1A1A1A" opacity="0.85"/>
+  <rect x="31" y="38" width="5" height="22" fill="#1A1A1A" opacity="0.85"/>
+  <!-- Gold trim lines -->
+  <rect x="16" y="38" width="24" height="2" fill="#C8A94A"/>
+  <rect x="16" y="38" width="2" height="22" fill="#C8A94A"/>
+  <rect x="38" y="38" width="2" height="22" fill="#C8A94A"/>
+  <!-- Collar -->
+  <path d="M23 38 L28 44 L33 38" fill="#CC0000" stroke="#C8A94A" stroke-width="1"/>
+  <!-- Seoul badge area (small) -->
+  <circle cx="35" cy="43" r="3" fill="#C8A94A" opacity="0.9"/>
+  <text x="35" y="44.5" font-size="3" text-anchor="middle" fill="#CC0000" font-weight="bold">S</text>
+
+  <!-- Left arm -->
+  <rect x="8" y="38" width="9" height="16" rx="3" fill="#CC0000"/>
+  <rect x="10" y="38" width="3" height="16" fill="#1A1A1A" opacity="0.85"/>
+  <rect x="8" y="38" width="9" height="2" fill="#C8A94A"/>
+  <!-- Right arm raised (like photo!) -->
+  <rect x="39" y="30" width="9" height="16" rx="3" fill="#CC0000" transform="rotate(-25 43 38)"/>
+  <rect x="41" y="30" width="3" height="16" fill="#1A1A1A" opacity="0.85" transform="rotate(-25 43 38)"/>
+
+  <!-- Hands -->
+  <ellipse cx="13" cy="55" rx="4" ry="3.5" fill="#FDBCB4"/>
+  <ellipse cx="50" cy="42" rx="4" ry="3.5" fill="#FDBCB4"/>
+
+  <!-- Shorts - black -->
+  <rect x="18" y="59" width="9" height="7" rx="2" fill="#1A1A1A"/>
+  <rect x="29" y="59" width="9" height="7" rx="2" fill="#1A1A1A"/>
+  <!-- Gold stripe on shorts -->
+  <rect x="18" y="59" width="9" height="1.5" fill="#C8A94A"/>
+  <rect x="29" y="59" width="9" height="1.5" fill="#C8A94A"/>
+
+  <!-- Socks - red/white -->
+  <rect x="19" y="65" width="7" height="3" rx="1" fill="#CC0000"/>
+  <rect x="30" y="65" width="7" height="3" rx="1" fill="#CC0000"/>
+
+  <!-- Shoes - black cleats -->
+  <ellipse cx="22.5" cy="67" rx="5" ry="2.5" fill="#111"/>
+  <ellipse cx="33.5" cy="67" rx="5" ry="2.5" fill="#111"/>
 </svg>`;
 
 function getAnsweredCount(){ return Object.keys(scores).filter(k=>scores[k]&&scores[k].attempts>0).length; }
 function getMapStep(){ return Math.min(TOTAL_STEPS-1,Math.floor((getAnsweredCount()/TOTAL_QS)*TOTAL_STEPS)); }
 
-function renderMap(containerId,mini){
+// ── Mini map (question card strip) ──────────────
+function renderMiniMap(containerId){
   const el=$(containerId); if(!el) return;
   const step=getMapStep(), done=getAnsweredCount(), pct=Math.round((done/TOTAL_QS)*100);
-  if(mini){
-    let h='<div class="mini-map-wrap">';
-    for(let i=0;i<TOTAL_STEPS;i++){
-      const cls=i<step?"done":i===step?"current":"locked";
-      h+=`<div class="mini-cell ${cls}" title="${MAP_STEPS[i].label}">${MAP_STEPS[i].icon}</div>`;
-    }
-    h+=`<span style="font-size:11px;color:var(--navy);font-weight:800;margin-left:4px">${pct}%</span></div>`;
-    el.innerHTML=h; return;
-  }
-  const skyArr=["#5DADE2","#5DADE2","#5DADE2","#2980B9","#2980B9","#1B4F72","#1B4F72","#1B4F72","#F39C12","#F39C12","#27AE60","#27AE60","#27AE60","#1A5276","#1A5276","#1A5276","#154360","#1A3A5C","#1A3A5C","#0D1F33"];
-  el.style.background=`linear-gradient(180deg,${skyArr[step]} 0%,${skyArr[step]} 45%,#5D8A3C 45%,#2D5A1B 100%)`;
-  let h=`<div class="map-title">🗺️ 서울 → JPC 여정</div>`;
-  h+=`<div class="map-path"><div class="map-progress-bar" style="width:${pct}%"></div></div>`;
-  h+='<div class="map-track">';
+  let h='<div class="mini-map-wrap">';
   for(let i=0;i<TOTAL_STEPS;i++){
     const cls=i<step?"done":i===step?"current":"locked";
-    h+=`<div class="map-cell ${cls}" title="${MAP_STEPS[i].label}">${MAP_STEPS[i].icon}</div>`;
+    const bg=i<step?"#27AE60":i===step?"#FFD700":"rgba(0,0,0,0.12)";
+    h+=`<div class="mini-cell" style="background:${bg}" title="${MAP_STEPS[i].label}">${i<step?"✓":i===step?MAP_STEPS[i].icon:"·"}</div>`;
   }
-  h+='</div>';
-  h+=`<div style="text-align:center;margin-top:8px">
-    <div style="font-size:11px;color:rgba(255,255,255,0.9);font-weight:700;margin-bottom:3px">📍 현재: ${MAP_STEPS[step].label}</div>
-    ${DOYOUNG_SVG}
-  </div>`;
-  h+=`<div class="map-pct">${done} / ${TOTAL_QS} 문제 완료 (${pct}%)</div>`;
+  h+=`<span style="font-size:11px;color:var(--navy);font-weight:800;margin-left:6px">${pct}%</span></div>`;
   el.innerHTML=h;
+}
+
+// ── Mario-style Canvas Map ───────────────────────
+function renderMap(containerId, mini){
+  if(mini){ renderMiniMap(containerId); return; }
+  const el=$(containerId); if(!el) return;
+  const step=getMapStep(), done=getAnsweredCount(), pct=Math.round((done/TOTAL_QS)*100);
+
+  // Build map via canvas
+  const W=420, H=280;
+  el.innerHTML=`<canvas id="mario-canvas" width="${W}" height="${H}" style="width:100%;display:block;border-radius:20px"></canvas>
+  <div style="background:#1A3A5C;padding:6px 12px;display:flex;justify-content:space-between;align-items:center">
+    <span style="color:#FFD700;font-size:12px;font-weight:800;font-family:'Baloo 2',cursive">📍 ${MAP_STEPS[step].label}</span>
+    <span style="color:#fff;font-size:12px;font-weight:800;font-family:'Baloo 2',cursive">${done}/${TOTAL_QS} 완료</span>
+  </div>`;
+
+  const canvas=document.getElementById("mario-canvas");
+  if(!canvas||!canvas.getContext) return;
+  const c=canvas.getContext("2d");
+
+  // ── Sky gradient ──
+  const skyPhase=Math.floor(step/4); // 0=day,1=sunset,2=night,3=dawn,4=aussie
+  const skies=[["#5BA3E0","#87CEEB"],["#F4A460","#FF7043"],["#1A237E","#283593"],["#FF8F00","#FFA726"],["#2196F3","#64B5F6"]];
+  const [skyT,skyB]=skies[Math.min(skyPhase,4)];
+  const skyGrad=c.createLinearGradient(0,0,0,H*0.55);
+  skyGrad.addColorStop(0,skyT); skyGrad.addColorStop(1,skyB);
+  c.fillStyle=skyGrad; c.fillRect(0,0,W,H*0.55);
+
+  // ── Sun / Moon ──
+  if(skyPhase<2){
+    c.fillStyle="#FFD700"; c.beginPath(); c.arc(360,45,28,0,Math.PI*2); c.fill();
+    c.fillStyle="#FFF176"; c.beginPath(); c.arc(360,45,22,0,Math.PI*2); c.fill();
+  } else {
+    c.fillStyle="#E8EAF6"; c.beginPath(); c.arc(360,45,20,0,Math.PI*2); c.fill();
+    // Stars
+    [[50,30],[120,20],[200,35],[280,15],[80,60]].forEach(([x,y])=>{
+      c.fillStyle="#fff"; c.fillRect(x,y,3,3);
+    });
+  }
+
+  // ── Clouds (mario style — white rounded blobs) ──
+  [[60,40],[180,30],[310,50]].forEach(([cx,cy])=>{
+    c.fillStyle="rgba(255,255,255,0.9)";
+    c.beginPath(); c.arc(cx,cy,16,0,Math.PI*2); c.fill();
+    c.beginPath(); c.arc(cx+20,cy,20,0,Math.PI*2); c.fill();
+    c.beginPath(); c.arc(cx+40,cy,16,0,Math.PI*2); c.fill();
+    c.beginPath(); c.arc(cx+20,cy-10,14,0,Math.PI*2); c.fill();
+  });
+
+  // ── Ground ──
+  const groundY=H*0.55;
+  // Grass top strip
+  c.fillStyle="#4CAF50"; c.fillRect(0,groundY,W,18);
+  // Darker grass detail
+  c.fillStyle="#388E3C";
+  for(let x=0;x<W;x+=14){
+    c.beginPath(); c.moveTo(x,groundY); c.lineTo(x+7,groundY-8); c.lineTo(x+14,groundY); c.fill();
+  }
+  // Ground base
+  const groundGrad=c.createLinearGradient(0,groundY+18,0,H);
+  groundGrad.addColorStop(0,"#8B6914"); groundGrad.addColorStop(1,"#5D4037");
+  c.fillStyle=groundGrad; c.fillRect(0,groundY+18,W,H-groundY-18);
+
+  // ── Decorative trees & hills ──
+  // Hills
+  [[70,groundY+5,50],[-20,groundY+5,60],[350,groundY+5,45]].forEach(([hx,hy,r])=>{
+    c.fillStyle="#388E3C"; c.beginPath(); c.arc(hx,hy,r,0,Math.PI*2); c.fill();
+  });
+  // Trees
+  [[30,groundY],[370,groundY],[200,groundY]].forEach(([tx,ty])=>{
+    c.fillStyle="#5D4037"; c.fillRect(tx-3,ty-20,6,20);
+    c.fillStyle="#2E7D32"; c.beginPath(); c.arc(tx,ty-28,16,0,Math.PI*2); c.fill();
+    c.fillStyle="#388E3C"; c.beginPath(); c.arc(tx-6,ty-22,10,0,Math.PI*2); c.fill();
+    c.beginPath(); c.arc(tx+6,ty-22,10,0,Math.PI*2); c.fill();
+  });
+
+  // ── PATH (dotted road) ──
+  // Layout: 2 rows of 10 nodes each, snake pattern
+  const COLS=10, ROWS=2;
+  const nodeW=(W-40)/COLS, nodeH=50;
+  const startX=20+nodeW/2, row1Y=groundY-55, row2Y=groundY-105;
+
+  // Node positions (snake: row1 L→R, row2 R→L)
+  const nodes=[];
+  for(let i=0;i<TOTAL_STEPS;i++){
+    if(i<COLS){
+      nodes.push({x:startX+i*nodeW, y:row1Y});
+    } else {
+      nodes.push({x:startX+(TOTAL_STEPS-1-i)*nodeW, y:row2Y});
+    }
+  }
+
+  // Draw connecting path
+  c.strokeStyle="rgba(255,255,255,0.5)";
+  c.setLineDash([6,5]); c.lineWidth=3;
+  c.beginPath();
+  nodes.forEach((n,i)=>{ i===0?c.moveTo(n.x,n.y):c.lineTo(n.x,n.y); });
+  c.stroke(); c.setLineDash([]);
+
+  // Completed path (gold)
+  if(step>0){
+    c.strokeStyle="#FFD700"; c.lineWidth=4;
+    c.beginPath();
+    nodes.slice(0,step+1).forEach((n,i)=>{ i===0?c.moveTo(n.x,n.y):c.lineTo(n.x,n.y); });
+    c.stroke();
+  }
+
+  // ── Draw nodes ──
+  nodes.forEach((n,i)=>{
+    const isDone=i<step, isCur=i===step;
+    // Shadow
+    c.fillStyle="rgba(0,0,0,0.2)";
+    c.beginPath(); c.arc(n.x+2,n.y+2,isCur?16:13,0,Math.PI*2); c.fill();
+
+    if(i===TOTAL_STEPS-1){
+      // Final node: JPC castle
+      c.fillStyle="#FFD700";
+      c.fillRect(n.x-14,n.y-18,28,22); // base
+      c.fillStyle="#FFA000";
+      [-10,-2,6,14].forEach(bx=>{ c.fillRect(n.x+bx-3,n.y-24,6,8); }); // battlements
+      c.fillStyle="#1A3A5C";
+      c.fillRect(n.x-4,n.y-10,8,14); // door
+      // Flag
+      c.fillStyle="#CC0000"; c.fillRect(n.x,n.y-30,12,8);
+      c.strokeStyle="#FFD700"; c.lineWidth=1.5;
+      c.beginPath(); c.moveTo(n.x,n.y-30); c.lineTo(n.x,n.y-45); c.stroke();
+    } else if(i===0){
+      // Start: Seoul house
+      c.fillStyle=isDone?"#4CAF50":isCur?"#FFD700":"rgba(255,255,255,0.3)";
+      c.beginPath(); c.arc(n.x,n.y,14,0,Math.PI*2); c.fill();
+      c.fillStyle=isDone||isCur?"#fff":"rgba(255,255,255,0.5)";
+      c.font="14px serif"; c.textAlign="center"; c.textBaseline="middle";
+      c.fillText("🏠",n.x,n.y);
+    } else {
+      // Regular node
+      const nodeColor=isDone?"#4CAF50":isCur?"#FFD700":"rgba(200,200,200,0.35)";
+      c.fillStyle=nodeColor;
+      c.beginPath(); c.arc(n.x,n.y,isCur?15:12,0,Math.PI*2); c.fill();
+
+      // Border
+      c.strokeStyle=isCur?"#FF6F00":isDone?"#1B5E20":"rgba(255,255,255,0.4)";
+      c.lineWidth=isCur?3:2;
+      c.beginPath(); c.arc(n.x,n.y,isCur?15:12,0,Math.PI*2); c.stroke();
+
+      // Icon / checkmark
+      c.font=`${isCur?14:12}px serif`;
+      c.textAlign="center"; c.textBaseline="middle";
+      if(isDone){
+        c.fillStyle="#fff"; c.font="bold 11px sans-serif";
+        c.fillText("✓",n.x,n.y);
+      } else if(isCur){
+        c.fillText(MAP_STEPS[i].icon,n.x,n.y);
+      } else {
+        c.fillStyle="rgba(255,255,255,0.4)";
+        c.fillText(MAP_STEPS[i].icon,n.x,n.y);
+      }
+    }
+
+    // Glow animation for current
+    if(isCur){
+      c.strokeStyle="rgba(255,215,0,0.5)";
+      c.lineWidth=6; c.beginPath(); c.arc(n.x,n.y,20,0,Math.PI*2); c.stroke();
+      c.lineWidth=3; c.beginPath(); c.arc(n.x,n.y,24,0,Math.PI*2); c.stroke();
+    }
+  });
+
+  // ── Doyoung character on current node ──
+  const cur=nodes[step];
+  // Draw inline SVG as image via blob
+  const svgBlob=new Blob([DOYOUNG_SVG],{type:"image/svg+xml"});
+  const url=URL.createObjectURL(svgBlob);
+  const img=new Image();
+  img.onload=()=>{
+    // Character floats above current node
+    c.drawImage(img, cur.x-20, cur.y-68, 40, 52);
+    // Shadow under character
+    c.fillStyle="rgba(0,0,0,0.2)";
+    c.beginPath(); c.ellipse(cur.x,cur.y-18,14,4,0,0,Math.PI*2); c.fill();
+    URL.revokeObjectURL(url);
+    // Speech bubble with label
+    const lbl=MAP_STEPS[step].label;
+    const bx=cur.x+16, by=cur.y-72;
+    const bw=lbl.length*7+16, bh=22;
+    c.fillStyle="rgba(255,255,255,0.95)";
+    c.strokeStyle="#1A3A5C"; c.lineWidth=1.5;
+    roundRect(c,bx,by,bw,bh,8);
+    c.fill(); c.stroke();
+    // Tail
+    c.fillStyle="rgba(255,255,255,0.95)";
+    c.beginPath(); c.moveTo(bx,by+bh/2); c.lineTo(bx-8,by+bh/2+4); c.lineTo(bx,by+bh/2+8); c.closePath(); c.fill();
+    c.strokeStyle="#1A3A5C"; c.lineWidth=1;
+    c.beginPath(); c.moveTo(bx,by+bh/2); c.lineTo(bx-8,by+bh/2+4); c.lineTo(bx,by+bh/2+8); c.stroke();
+    // Text
+    c.fillStyle="#1A3A5C"; c.font="bold 11px 'Nunito',sans-serif";
+    c.textAlign="left"; c.textBaseline="middle";
+    c.fillText(lbl,bx+8,by+bh/2);
+  };
+  img.src=url;
+
+  // ── Progress bar at top ──
+  c.fillStyle="rgba(0,0,0,0.25)";
+  c.beginPath(); roundRect(c,10,8,W-20,12,6); c.fill();
+  c.fillStyle="#FFD700";
+  if(pct>0){ c.beginPath(); roundRect(c,10,8,(W-20)*(pct/100),12,6); c.fill(); }
+  // Progress label
+  c.fillStyle="#fff"; c.font="bold 9px 'Baloo 2',cursive";
+  c.textAlign="center"; c.textBaseline="middle";
+  c.fillText(`서울 → JPC  ${pct}%`,W/2,14);
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y);
+  ctx.arcTo(x+w,y,x+w,y+r,r); ctx.lineTo(x+w,y+h-r);
+  ctx.arcTo(x+w,y+h,x+w-r,y+h,r); ctx.lineTo(x+r,y+h);
+  ctx.arcTo(x,y+h,x,y+h-r,r); ctx.lineTo(x,y+r);
+  ctx.arcTo(x,y,x+r,y,r); ctx.closePath();
 }
 
 // ════════════════════════════════════════════════
@@ -704,9 +922,17 @@ function saveScores(){
 }
 
 function showScreen(name){
-  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  // Hide all screens completely
+  document.querySelectorAll(".screen").forEach(s=>{
+    s.classList.remove("active");
+    s.style.display = "none";
+  });
   const el = document.getElementById("screen-"+name);
-  if(el) el.classList.add("active");
+  if(!el) return;
+  el.classList.add("active");
+  // flex screens: home, pin, result — block screens: session, stats
+  const flexScreens = ["home","pin","result"];
+  el.style.display = flexScreens.includes(name) ? "flex" : "block";
   if(name==="home")  refreshHome();
   if(name==="stats") renderStats();
 }
@@ -740,7 +966,7 @@ function startSession(){
   loadScores();
   queue=buildQueue(); qIdx=0; sessionStars=[];
   showScreen("session");
-  loadQ();
+  setTimeout(loadQ, 50); // slight delay to ensure DOM is ready
 }
 
 function loadQ(){
