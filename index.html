@@ -1111,10 +1111,68 @@ function resetScores(){
 }
 
 // ════════════════════════════════════════════════
+// PIN  (preset: 0125)
+// ════════════════════════════════════════════════
+const PIN_KEY = "doyoung_pin";
+const PRESET_PIN = "0125";
+let pinInput = "";
+
+function updatePinDots(){
+  const dots = document.querySelectorAll(".pin-dot");
+  dots.forEach((d,i) => d.classList.toggle("filled", i < pinInput.length));
+}
+
+function pinPress(v){
+  if(v === "clear"){ pinInput = ""; updatePinDots(); return; }
+  if(v === "del"){   pinInput = pinInput.slice(0,-1); updatePinDots(); return; }
+  if(pinInput.length >= 4) return;
+  pinInput += v;
+  updatePinDots();
+  if(pinInput.length === 4) setTimeout(checkPin, 200);
+}
+
+function checkPin(){
+  const stored = localStorage.getItem(PIN_KEY) || PRESET_PIN;
+  if(!localStorage.getItem(PIN_KEY)){
+    localStorage.setItem(PIN_KEY, PRESET_PIN);
+  }
+  if(pinInput === stored){
+    enterApp();
+  } else {
+    const msg = document.getElementById("pin-msg");
+    if(msg) msg.textContent = "❌ PIN이 맞지 않아요. 다시 시도하세요.";
+    pinInput = ""; updatePinDots();
+  }
+}
+
+function enterApp(){
+  loadScores();
+  refreshHome();
+  showScreen("home");
+}
+
+function changePIN(){
+  // Clear stored PIN so user can set a new one on next visit
+  // For simplicity: prompt for new PIN
+  const newPin = prompt("새 PIN 4자리를 입력하세요 (숫자만):");
+  if(newPin && /^\d{4}$/.test(newPin)){
+    localStorage.setItem(PIN_KEY, newPin);
+    alert("PIN이 " + newPin + " 으로 변경됐어요!");
+  } else if(newPin !== null){
+    alert("4자리 숫자만 입력해주세요.");
+  }
+}
+
+// ════════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════════
 loadScores();
-showScreen("home");
+// Show PIN screen first
+document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+const pinScreen = document.getElementById("screen-pin");
+if(pinScreen) pinScreen.classList.add("active");
+// If PIN not yet set, store the preset
+if(!localStorage.getItem(PIN_KEY)) localStorage.setItem(PIN_KEY, PRESET_PIN);
 </script>
 </body>
 </html>
