@@ -252,6 +252,56 @@ button:active { opacity:0.85; transform:scale(0.97); }
 .result-sub   { color:#90CAF9; font-size:14px; margin-bottom:16px; }
 .result-grid  { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
 .result-cell  { border-radius:10px; padding:6px 2px; text-align:center; }
+
+/* ── JOURNEY MAP ── */
+.map-wrap {
+  background:linear-gradient(180deg,#87CEEB 0%,#87CEEB 35%,#90EE90 35%,#228B22 100%);
+  border-radius:24px; padding:16px 12px 12px;
+  margin-bottom:16px; box-shadow:0 6px 24px rgba(0,0,0,0.15);
+  overflow:hidden; position:relative;
+}
+.map-title {
+  font-family:'Baloo 2',cursive; color:#fff; font-size:14px;
+  text-align:center; margin-bottom:10px; text-shadow:0 1px 3px rgba(0,0,0,0.4);
+}
+.map-track {
+  display:flex; flex-wrap:wrap; gap:3px;
+  justify-content:center; position:relative;
+}
+.map-cell {
+  width:36px; height:36px; border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; position:relative; flex-shrink:0;
+  transition:transform .2s;
+}
+.map-cell.done    { background:rgba(255,255,255,0.9); box-shadow:0 2px 6px rgba(0,0,0,0.2); }
+.map-cell.current { background:#fff; box-shadow:0 0 0 3px #FFD700,0 2px 8px rgba(0,0,0,0.3); transform:scale(1.15); z-index:2; }
+.map-cell.locked  { background:rgba(255,255,255,0.25); filter:grayscale(0.7) opacity(0.5); }
+.map-path {
+  position:absolute; top:50%; left:0; right:0; height:3px;
+  background:rgba(255,255,255,0.4); z-index:0; border-radius:2px;
+}
+.map-progress-bar {
+  height:3px; background:#FFD700; border-radius:2px; transition:width .8s;
+}
+.map-pct {
+  text-align:center; font-family:'Baloo 2',cursive;
+  font-size:13px; color:#fff; margin-top:8px;
+  text-shadow:0 1px 3px rgba(0,0,0,0.5);
+}
+/* mini map in question card */
+.mini-map-wrap {
+  display:flex; align-items:center; gap:3px;
+  background:rgba(26,58,92,0.08); border-radius:10px;
+  padding:4px 8px;
+}
+.mini-cell {
+  width:14px; height:14px; border-radius:3px; font-size:8px;
+  display:flex; align-items:center; justify-content:center;
+}
+.mini-cell.done    { background:#27AE60; }
+.mini-cell.current { background:#FFD700; box-shadow:0 0 0 1px #FFA500; }
+.mini-cell.locked  { background:rgba(0,0,0,0.1); }
 </style>
 </head>
 <body>
@@ -293,14 +343,18 @@ button:active { opacity:0.85; transform:scale(0.97); }
 <div id="screen-home" class="screen">
   <div class="home-inner">
     <div class="hero-card">
-      <div style="font-size:60px">🎓</div>
-      <h1>도영이의 JPC 연습</h1>
+      <h1 style="font-size:22px;margin:0 0 2px">도영이의 JPC 여정</h1>
       <p>John Paul College Brisbane · Year 3</p>
-      <div class="stats-row">
+      <div class="stats-row" style="margin-top:10px">
         <div><div class="stat-num" style="color:var(--gold)">69</div><div class="stat-lbl">총 질문</div></div>
         <div><div class="stat-num" style="color:var(--coral)" id="stat-tried">0</div><div class="stat-lbl">연습함</div></div>
-        <div><div class="stat-num" style="color:var(--teal)"  id="stat-avg">0%</div><div class="stat-lbl">평균 별점</div></div>
+        <div><div class="stat-num" style="color:var(--teal)"  id="stat-avg">0★</div><div class="stat-lbl">평균 별점</div></div>
       </div>
+    </div>
+
+    <!-- JOURNEY MAP -->
+    <div class="map-wrap" id="home-map">
+      <div class="map-title">🗺️ 지도 로딩중…</div>
     </div>
 
     <div class="guide-card">
@@ -350,6 +404,7 @@ button:active { opacity:0.85; transform:scale(0.97); }
         <span class="q-badge" id="q-badge" style="display:none"></span>
       </div>
       <p class="q-text" id="q-text"></p>
+      <div id="mini-map" style="margin-bottom:12px"></div>
       <button class="btn-tts idle" id="btn-tts" onclick="toggleTTS()">🔊 질문 듣기</button>
     </div>
 
@@ -518,6 +573,78 @@ const Q = [
 ];
 
 // ════════════════════════════════════════════════
+// JOURNEY MAP
+// ════════════════════════════════════════════════
+const MAP_STEPS = [
+  {icon:"🏠",label:"집 출발"},{icon:"✏️",label:"학교 준비"},{icon:"🛫",label:"인천공항"},
+  {icon:"☁️",label:"이륙!"},{icon:"⭐",label:"별자리"},{icon:"🌙",label:"밤하늘"},
+  {icon:"🌤️",label:"새벽 비행"},{icon:"🦅",label:"태평양"},{icon:"🌏",label:"호주 접근"},
+  {icon:"🦘",label:"시드니 도착"},{icon:"🌉",label:"하버브리지"},{icon:"🐨",label:"코알라 만남"},
+  {icon:"🚂",label:"브리즈번행"},{icon:"🌊",label:"강가 산책"},{icon:"🏙️",label:"브리즈번 시티"},
+  {icon:"🌿",label:"Daisy Hill"},{icon:"🚌",label:"스쿨버스"},{icon:"🏫",label:"JPC 정문"},
+  {icon:"⚽",label:"운동장"},{icon:"🎓",label:"입학 완료!"}
+];
+const TOTAL_STEPS=20, TOTAL_QS=69;
+
+const DOYOUNG_SVG=`<svg width="48" height="56" viewBox="0 0 48 56" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.35))">
+  <ellipse cx="24" cy="15" rx="13" ry="10" fill="#1C0F0A"/>
+  <rect x="11" y="13" width="26" height="7" rx="2" fill="#1C0F0A"/>
+  <ellipse cx="24" cy="23" rx="11" ry="12" fill="#FDBCB4"/>
+  <ellipse cx="19.5" cy="21.5" rx="2.5" ry="3" fill="#111"/>
+  <ellipse cx="28.5" cy="21.5" rx="2.5" ry="3" fill="#111"/>
+  <circle cx="20.5" cy="20.5" r="0.9" fill="#fff"/>
+  <circle cx="29.5" cy="20.5" r="0.9" fill="#fff"/>
+  <ellipse cx="15.5" cy="25" rx="2.5" ry="1.5" fill="#FFAAAA" opacity="0.65"/>
+  <ellipse cx="32.5" cy="25" rx="2.5" ry="1.5" fill="#FFAAAA" opacity="0.65"/>
+  <path d="M19.5 28 Q24 32 28.5 28" stroke="#C06060" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  <ellipse cx="13" cy="23" rx="2.5" ry="3" fill="#FDBCB4"/>
+  <ellipse cx="35" cy="23" rx="2.5" ry="3" fill="#FDBCB4"/>
+  <rect x="14" y="34" width="20" height="17" rx="4" fill="#1A3A5C"/>
+  <path d="M20 34 L24 39 L28 34" fill="white" opacity="0.85"/>
+  <rect x="8"  y="34" width="7" height="13" rx="3" fill="#1A3A5C"/>
+  <rect x="33" y="34" width="7" height="13" rx="3" fill="#1A3A5C"/>
+  <ellipse cx="11" cy="48" rx="3.5" ry="3" fill="#FDBCB4"/>
+  <ellipse cx="37" cy="48" rx="3.5" ry="3" fill="#FDBCB4"/>
+  <rect x="16" y="50" width="7" height="5" rx="2" fill="#2C3E50"/>
+  <rect x="25" y="50" width="7" height="5" rx="2" fill="#2C3E50"/>
+  <ellipse cx="19.5" cy="55" rx="4" ry="2" fill="#111"/>
+  <ellipse cx="28.5" cy="55" rx="4" ry="2" fill="#111"/>
+</svg>`;
+
+function getAnsweredCount(){ return Object.keys(scores).filter(k=>scores[k]&&scores[k].attempts>0).length; }
+function getMapStep(){ return Math.min(TOTAL_STEPS-1,Math.floor((getAnsweredCount()/TOTAL_QS)*TOTAL_STEPS)); }
+
+function renderMap(containerId,mini){
+  const el=$(containerId); if(!el) return;
+  const step=getMapStep(), done=getAnsweredCount(), pct=Math.round((done/TOTAL_QS)*100);
+  if(mini){
+    let h='<div class="mini-map-wrap">';
+    for(let i=0;i<TOTAL_STEPS;i++){
+      const cls=i<step?"done":i===step?"current":"locked";
+      h+=`<div class="mini-cell ${cls}" title="${MAP_STEPS[i].label}">${MAP_STEPS[i].icon}</div>`;
+    }
+    h+=`<span style="font-size:11px;color:var(--navy);font-weight:800;margin-left:4px">${pct}%</span></div>`;
+    el.innerHTML=h; return;
+  }
+  const skyArr=["#5DADE2","#5DADE2","#5DADE2","#2980B9","#2980B9","#1B4F72","#1B4F72","#1B4F72","#F39C12","#F39C12","#27AE60","#27AE60","#27AE60","#1A5276","#1A5276","#1A5276","#154360","#1A3A5C","#1A3A5C","#0D1F33"];
+  el.style.background=`linear-gradient(180deg,${skyArr[step]} 0%,${skyArr[step]} 45%,#5D8A3C 45%,#2D5A1B 100%)`;
+  let h=`<div class="map-title">🗺️ 서울 → JPC 여정</div>`;
+  h+=`<div class="map-path"><div class="map-progress-bar" style="width:${pct}%"></div></div>`;
+  h+='<div class="map-track">';
+  for(let i=0;i<TOTAL_STEPS;i++){
+    const cls=i<step?"done":i===step?"current":"locked";
+    h+=`<div class="map-cell ${cls}" title="${MAP_STEPS[i].label}">${MAP_STEPS[i].icon}</div>`;
+  }
+  h+='</div>';
+  h+=`<div style="text-align:center;margin-top:8px">
+    <div style="font-size:11px;color:rgba(255,255,255,0.9);font-weight:700;margin-bottom:3px">📍 현재: ${MAP_STEPS[step].label}</div>
+    ${DOYOUNG_SVG}
+  </div>`;
+  h+=`<div class="map-pct">${done} / ${TOTAL_QS} 문제 완료 (${pct}%)</div>`;
+  el.innerHTML=h;
+}
+
+// ════════════════════════════════════════════════
 // STATE
 // ════════════════════════════════════════════════
 const STORE = "doyoung_v6";
@@ -585,6 +712,9 @@ function loadQ(){
   $("q-text").textContent=q.q;
   $("model-text2").textContent=`"${q.a}"`;
 
+  // mini map
+  renderMap("mini-map", true);
+
   // badge
   const sc=scores[q.id], badge=$("q-badge");
   if(sc&&sc.attempts){
@@ -649,6 +779,8 @@ function selectStar(v){
 
   // show next button after short delay
   setTimeout(()=>{ $("btn-next").style.display="block"; },400);
+  // refresh mini map with new progress
+  renderMap("mini-map", true);
 }
 
 // ════════════════════════════════════════════════
@@ -934,6 +1066,7 @@ function refreshHome(){
   const avg=tried.length?+(tried.reduce((s,k)=>s+scores[k].avgStar,0)/tried.length).toFixed(1):0;
   $("stat-tried").textContent=tried.length;
   $("stat-avg").textContent=avg?`${avg}★`:"0★";
+  renderMap("home-map", false);
 }
 
 function renderStats(){
